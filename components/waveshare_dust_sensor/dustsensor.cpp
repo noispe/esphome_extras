@@ -29,7 +29,7 @@ void WaveshareDustSensor::setup() {
   });
 }
 void WaveshareDustSensor::dump_config() {
-  LOG_SENSOR("", "Waveshare Dust Sensor", this);
+  LOG_SENSOR(TAG, "Waveshare Dust Sensor", this);
   ESP_LOGCONFIG(TAG, "  ADC Pin: %u", this->adc_pin_);
   LOG_PIN("  ILED Pin:", this->iled_pin_);
   LOG_UPDATE_INTERVAL(this);
@@ -49,7 +49,7 @@ float WaveshareDustSensor::sample() {
 #endif
 
 #ifdef ARDUINO_ARCH_ESP8266
-  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 1024.0) f; // NOLINT
+  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 1024.0); // NOLINT
 #endif
   return avg_voltage_.current();
 }
