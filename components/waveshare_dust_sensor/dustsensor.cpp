@@ -9,9 +9,9 @@ static const char *TAG = "waveshare_dust_sensor";
 void WaveshareDustSensor::setup() {
   ESP_LOGCONFIG(TAG, "Setting up Waveshare Dust Sensor '%s'...", this->get_name().c_str());
   this->iled_pin_->setup();
-  this->iled_pin_->digital_write(0);
+  this->iled_pin_->digital_write(false);
 #ifdef ARDUINO_ARCH_ESP32
-  analogSetPinAttenuation(this->adc_pin_, ADC_11db);
+  analogSetPinAttenuation(this->adc_pin_, ADC_2_5db);
 #endif
 }
 void WaveshareDustSensor::dump_config() {
@@ -22,10 +22,10 @@ void WaveshareDustSensor::dump_config() {
 }
 float WaveshareDustSensor::get_setup_priority() const { return setup_priority::DATA; }
 void WaveshareDustSensor::update() {
-  this->iled_pin_->digital_write(1);
+  this->iled_pin_->digital_write(true);
   delayMicroseconds(280);
   float volts = this->sample() * 1000.0f;  // to mV
-  this->iled_pin_->digital_write(0);
+  this->iled_pin_->digital_write(false);
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->get_name().c_str(), volts);
 
   float ppm_value = 0;
@@ -38,7 +38,7 @@ void WaveshareDustSensor::update() {
 
 float WaveshareDustSensor::sample() {
 #ifdef ARDUINO_ARCH_ESP32
-  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 4095.0f * 3.9);  // NOLINT
+  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 4095.0f * 1.1);  // NOLINT
 #endif
 
 #ifdef ARDUINO_ARCH_ESP8266

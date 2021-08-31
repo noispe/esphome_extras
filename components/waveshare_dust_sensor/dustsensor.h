@@ -9,9 +9,9 @@
 namespace esphome {
 namespace waveshare_dust_sensor {
 namespace detail {
-template <typename T, typename Tl, size_t N> class moving_avg {
-public:
-  moving_avg &accumulate(T sample) {
+template<typename T, typename Tl, size_t N> class MovingAvg {
+ public:
+  MovingAvg &accumulate(T sample) {
     total_ += sample;
     if (num_samples_ < N) {
       samples_[num_samples_++] = sample;
@@ -25,19 +25,17 @@ public:
 
   T current() const { return total_ / std::min(num_samples_, N); }
 
-private:
+ private:
   T samples_[N];
   size_t num_samples_{0};
   Tl total_{0};
 };
 
-} // namespace detail
-class WaveshareDustSensor : public sensor::Sensor,
-                            public PollingComponent,
-                            public voltage_sampler::VoltageSampler {
-public:
-  static constexpr float cov_ratio = 0.2f;         // ug/mmm / mv
-  static constexpr float no_dust_voltage = 400.0f; // mv
+}  // namespace detail
+class WaveshareDustSensor : public sensor::Sensor, public PollingComponent, public voltage_sampler::VoltageSampler {
+ public:
+  static constexpr float cov_ratio = 0.2f;          // ug/mmm / mv
+  static constexpr float no_dust_voltage = 400.0f;  // mv
   static constexpr float sys_voltage = 5000.0f;
 
   void update() override;
@@ -50,12 +48,12 @@ public:
 #ifdef ARDUINO_ARCH_ESP8266
   std::string unique_id() override;
 #endif
-protected:
+ protected:
   uint8_t adc_pin_;
   GPIOPin *iled_pin_ = nullptr;
   float current_value_ = 0;
-  detail::moving_avg<float, float, 10> avg_voltage_{};
+  detail::MovingAvg<float, float, 1> avg_voltage_{};
 };
 
-} // namespace waveshare_dust_sensor
-} // namespace esphome
+}  // namespace waveshare_dust_sensor
+}  // namespace esphome
