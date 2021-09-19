@@ -9,8 +9,10 @@
 namespace esphome {
 namespace mq9_circut {
 
-class Mq9Circut : public sensor::Sensor, public Component, public voltage_sampler::VoltageSampler {
- public:
+class Mq9Circut : public sensor::Sensor,
+                  public Component,
+                  public voltage_sampler::VoltageSampler {
+public:
   enum gas_type { CO, LPG, NH4 };
 
   void update_co();
@@ -27,18 +29,22 @@ class Mq9Circut : public sensor::Sensor, public Component, public voltage_sample
 #ifdef ARDUINO_ARCH_ESP8266
   std::string unique_id() override;
 #endif
- protected:
-  void calibrate();
+protected:
+  void start_calibration();
+  void finish_calibration();
   float calculate_ppm(gas_type type, float voltage);
   void toggle_burnoff();
   uint count_ = 0;
   uint8_t adc_pin_;
   bool burnoff_ = false;
-  float r0_ = 0;
+  bool calibrating_ = false;
+  int calibration_counter_ = 1000;
+  float calibration_accumulator_ = 0.0f;
+  float r0_ = 0.0f;
   GPIOPin *control_pin_ = nullptr;
   sensor::Sensor *tvoc_sensor_{nullptr};
   sensor::Sensor *co_sensor_{nullptr};
 };
 
-}  // namespace mq9_circut
-}  // namespace esphome
+} // namespace mq9_circut
+} // namespace esphome

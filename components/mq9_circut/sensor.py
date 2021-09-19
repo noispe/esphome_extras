@@ -5,6 +5,7 @@ from esphome.components import sensor, voltage_sampler
 from esphome.const import (
     CONF_ID,
     UNIT_PARTS_PER_MILLION,
+    UNIT_PARTS_PER_BILLION,
     CONF_TVOC,
     DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_CARBON_MONOXIDE,
@@ -34,9 +35,9 @@ CONFIG_SCHEMA = (
                 min=0, max=100
             ),
             cv.Optional(CONF_TVOC): sensor.sensor_schema(
-                UNIT_PARTS_PER_MILLION,
+                UNIT_PARTS_PER_BILLION,
                 ICON_CHEMICAL_WEAPON,
-                3,
+                2,
                 DEVICE_CLASS_EMPTY,
                 STATE_CLASS_MEASUREMENT,
             ),
