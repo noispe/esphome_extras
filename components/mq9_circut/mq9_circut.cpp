@@ -11,7 +11,8 @@ void Mq9Circut::update_co() {
     return;
   }
   float volts = this->sample();
-  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(), volts);
+  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(),
+           volts);
   this->co_sensor_->publish_state(this->calculate_ppm(gas_type::CO, volts));
 }
 
@@ -20,51 +21,37 @@ void Mq9Circut::update_tvoc() {
     return;
   }
   float volts = this->sample();
-  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->tvoc_sensor_->get_name().c_str(), volts);
-  this->tvoc_sensor_->publish_state(this->calculate_ppm(gas_type::LPG, volts));
-}
-
-void Mq9Circut::calibrate() {
-  ESP_LOGD(TAG, "Start R0 calibration");
-  this->burnoff_ = false;
-  this->toggle_burnoff();
-  delayMicroseconds(500);
-
-  float sensor_values = 0.0f;     // Define variable for analog readings
-  for (int x = 0; x < 1000; x++)  // Start for loop
-  {
-    sensor_values = sensor_values + this->sample();  // Add analog values of sensor 500 times
-    delayMicroseconds(10);
-  }
-  float sensor_volt = sensor_values / 1000.0;          // Take average of readings
-  float rs_air = ((5.0 * 10.0) / sensor_volt) - 10.0;  // Calculate RS in fresh air
-  this->r0_ = rs_air / 4.4;                            // Calculate R0
-  ESP_LOGD(TAG, "Calibrated R0=%.2f", this->r0_);
-  this->toggle_burnoff();
+  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV",
+           this->tvoc_sensor_->get_name().c_str(), volts);
+  this->tvoc_sensor_->publish_state(this->calculate_ppm(gas_type::LPG, volts) * 1000);
 }
 
 float Mq9Circut::calculate_ppm(gas_type type, float voltage) {
-  float range = this->burnoff_ ? 5.0 : 1.5;
-  float rs_gas = ((range * 10.0) / voltage) - 10.0;  // Get value of RS in a gas
-  double ratio = rs_gas / this->r0_;                 // Get ratio rs_gas/rs_air
+  float range = this->burnoff_ ? 5.0f : 1.5f;
+  float rs_gas =
+      ((range * 10.0f) / voltage) - 10.0f; // Get value of RS in a gas
+  float ratio = rs_gas / this->r0_;        // Get ratio rs_gas/rs_air
+  float scale = 1.0f;
 
   switch (type) {
-    case gas_type::CO:
-      return pow(10, ((log(ratio) - 1.24) / -0.45));
-      break;
+  case gas_type::CO:
+    scale = (logf(ratio) - 1.24f) / -0.45f;
+    break;
 
-    case gas_type::LPG:
-      return pow(10, ((log(ratio) - 1.37) / -0.46));
-      break;
+  case gas_type::LPG:
+    scale = (logf(ratio) - 1.37f) / -0.46f;
+    break;
 
-    case gas_type::NH4:
-      return pow(10, ((log(ratio) - 3.35) / -0.37));
-      break;
+  case gas_type::NH4:
+    scale = (logf(ratio) - 3.35f) / -0.37f;
+    break;
 
-    default:
-      return 0;
-      break;
+  default:
+    break;
   }
+  ESP_LOGCONFIG(TAG, "calculate_ppm %d '%.2fV' scale: '%.2f'.", (int)type,
+                voltage, scale);
+  return powf(10, scale);
 }
 
 void Mq9Circut::setup() {
@@ -72,18 +59,33 @@ void Mq9Circut::setup() {
   this->control_pin_->setup();
   this->control_pin_->digital_write(false);
   if (this->r0_ == 0) {
-    this->calibrate();
-  } else {
-    ESP_LOGD(TAG, "No R0 calibration needed, using %.2f", this->r0_);
+    this->start_calibration();
   }
-  set_interval(30000, [this]() {
+
+  set_interval(300, [this]() {
+    if (this->calibrating_) {
+      this->count_++;
+      if (this->count_ < 10) { // warm up 30sec
+        return;
+      }
+      this->calibration_accumulator_ += this->sample();
+      if (this->count_ > 810) { // 2min
+        this->finish_calibration();
+        this->count_ = 0;
+      }
+      return;
+    }
+    if (this->r0_ == 0) {
+      this->start_calibration();
+      return;
+    }
     this->count_++;
-    if (this->burnoff_ && this->count_ % 2 == 0) {
+    if (this->burnoff_ && this->count_ > 200) {
       ESP_LOGD(TAG, "Sample tvoc %d, %d", this->burnoff_, this->count_);
       this->toggle_burnoff();
       this->update_tvoc();
       this->count_ = 0;
-    } else if (!this->burnoff_ && this->count_ % 3 == 0) {
+    } else if (!this->burnoff_ && this->count_ > 300) {
       ESP_LOGD(TAG, "Sample co %d, %d", this->burnoff_, this->count_);
       this->update_co();
       this->count_ = 0;
@@ -115,26 +117,52 @@ void Mq9Circut::toggle_burnoff() {
 
 float Mq9Circut::sample() {
 #ifdef ARDUINO_ARCH_ESP32
-  float value_v = analogRead(this->adc_pin_) / 4095.0f;  // NOLINT
+  float value_v = analogRead(this->adc_pin_) / 4095.0f; // NOLINT
   if (this->burnoff_) {
-    value_v *= 3.9;
+    value_v *= 3.9f;
   } else {
-    value_v *= 1.1;
+    value_v *= 1.1f;
   }
   return value_v;
 #endif
 
 #ifdef ARDUINO_ARCH_ESP8266
-  return analogRead(this->adc_pin_) / 1024.0f;  // NOLINT
+  return analogRead(this->adc_pin_) / 1024.0f; // NOLINT
 #endif
 }
 
 float Mq9Circut::get_setup_priority() const { return setup_priority::DATA; }
 
+void Mq9Circut::start_calibration() {
+  ESP_LOGD(TAG, "Start R0 calibration");
+  this->calibrating_ = true;
+  this->calibration_accumulator_ = 0.0f; // Define variable for analog readings
+  this->burnoff_ = false;
+  this->toggle_burnoff();
+  delayMicroseconds(500);
+}
+
+void Mq9Circut::finish_calibration() {
+  ESP_LOGD(TAG, "Finish R0 calibration");
+  float sensor_volt =
+      this->calibration_accumulator_ / 800.0f; // Take average of readings
+  if (sensor_volt != 0.0f) {
+    float rs_air =
+        ((5.0f * 10.0f) / sensor_volt) - 10.0f; // Calculate RS in fresh air
+    this->r0_ = rs_air / 4.4f;                  // Calculate R0
+    ESP_LOGD(TAG, "Calibrated R0=%.2f", this->r0_);
+  } else {
+    ESP_LOGD(TAG, "Failed sensor voltage=%.2f (%.2f)", sensor_volt,
+             this->calibration_accumulator_);
+  }
+  this->toggle_burnoff();
+  this->calibrating_ = false;
+}
+
 #ifdef ARDUINO_ARCH_ESP8266
 std::string Mq9Circut::unique_id() { return get_mac_address() + "-mq9"; }
 #endif
 
-}  // namespace mq9_circut
+} // namespace mq9_circut
 
-}  // namespace esphome
+} // namespace esphome

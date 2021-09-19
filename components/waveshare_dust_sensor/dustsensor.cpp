@@ -11,7 +11,7 @@ void WaveshareDustSensor::setup() {
   this->iled_pin_->setup();
   this->iled_pin_->digital_write(false);
 #ifdef ARDUINO_ARCH_ESP32
-  analogSetPinAttenuation(this->adc_pin_, ADC_2_5db);
+  analogSetPinAttenuation(this->adc_pin_, ADC_11db);
 #endif
 }
 void WaveshareDustSensor::dump_config() {
@@ -24,7 +24,8 @@ float WaveshareDustSensor::get_setup_priority() const { return setup_priority::D
 void WaveshareDustSensor::update() {
   this->iled_pin_->digital_write(true);
   delayMicroseconds(280);
-  float volts = this->sample() * 1000.0f;  // to mV
+  // Note: The output voltage has been divided (see schematic), so that the voltage measurement should x 11 to get the actual voltage.
+  float volts = this->sample() * 11.0f * 1000.0f;  // to mV
   this->iled_pin_->digital_write(false);
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->get_name().c_str(), volts);
 
@@ -38,13 +39,15 @@ void WaveshareDustSensor::update() {
 
 float WaveshareDustSensor::sample() {
 #ifdef ARDUINO_ARCH_ESP32
-  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 4095.0f * 1.1);  // NOLINT
+  //avg_voltage_.accumulate(analogRead(this->adc_pin_) / 4095.0f * 1.1);  // NOLINT
+  return analogRead(this->adc_pin_) / 4095.0f * 3.9;  // NOLINT
 #endif
 
 #ifdef ARDUINO_ARCH_ESP8266
-  avg_voltage_.accumulate(11 * analogRead(this->adc_pin_) / 1024.0);  // NOLINT
+  //avg_voltage_.accumulate(analogRead(this->adc_pin_) / 1024.0);  // NOLINT
+  return analogRead(this->adc_pin_) / 1024.0;  // NOLINT
 #endif
-  return avg_voltage_.current();
+  // return avg_voltage_.current();
 }
 
 #ifdef ARDUINO_ARCH_ESP8266
