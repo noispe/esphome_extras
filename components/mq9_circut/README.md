@@ -8,7 +8,7 @@ The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement
 
 ![schematic.png](schematic.png)
 
-[circutjs circut](schematic.txt)
+[circutjs circut](https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcMBMcUHYMGZIA4UA2ATmIxAUgpABZsKBTAWjDACgAnEFFGkJwn1x8BfKmHhxO3XuBpDIfMPKjJ4bAC4hsaOUIQo9qiEzzQUpUnnlhChSNkL9s5y5cIJsYN04lUAJgwAZgCGAK4ANhrS2NbgxIY0eOIJxpJsAOa0yfGGCGCG3oZUkGwASjIigkaiqlQ0VEglUNAI5ZVGtuIqVIlULvTNMG0A7tqKRjrdYmxj2Abg9toLRVCz41X6hrWljnjL29Xz26zFa1zHIEcLzX5SAB7ahCZE2ngv9Ep8AGoAlgB2bEeyiQYAw+zAOUhEC+IAA4gAFACSAHl1pdVrElKlSo9HOJIIZsMQIBIkLC4QA5AAibAARtwEOQmCgIMSnO81o9MMRtPQvEhHLQ5CAALIARSYxHRC1qlxKMsM10KKH2pSAA)
 ## Calibration:
 
 The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use https://apps.automeris.io/wpd to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
