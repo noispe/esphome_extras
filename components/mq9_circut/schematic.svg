@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 380">
+  <text x="50" y="30" dominant-baseline="middle" font-family="Arial" font-size="11">AD</text>
+  <text x="65" y="130" dominant-baseline="middle" font-family="Arial" font-size="12" text-anchor="end">+5V</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M70 130h30"/>
+  <text x="20" y="270" dominant-baseline="middle" font-family="Arial" font-size="11">GPIO</text>
+  <text x="65" y="190" dominant-baseline="middle" font-family="Arial" font-size="12" text-anchor="end">+3.3V</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M70 190h20M70 30h190M260 50h40M260 30h40M250 50h10M248 50v6M240 56h16M243 62h10M246 68h4M230 340h80M220 340h10M218 340v6M210 346h16M213 352h10M216 358h4M490 50v80M420 50h70"/>
+  <path fill="none" stroke="#000" stroke-width="2" d="M310 20h100v40H310z"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M300 30h10M300 50h10M410 30h10M410 50h10"/>
+  <text x="314" y="30" dominant-baseline="middle" font-family="Arial" font-size="12">A0</text>
+  <text x="314" y="50" dominant-baseline="middle" font-family="Arial" font-size="12">GND</text>
+  <text x="406" y="30" dominant-baseline="middle" font-family="Arial" font-size="12" text-anchor="end">D0</text>
+  <text x="406" y="50" dominant-baseline="middle" font-family="Arial" font-size="12" text-anchor="end">Vin</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M70 270h90M90 190h70M80 130h80M430 340h60M490 260v80M310 340h70M310 290v50M440 190h10M450 190v50M400 190h40M490 130v80M210 130h280M310 190v50M210 190h150M210 270h10M220 270h50M490 210v17M490 253v7M450 240h26"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="3" d="M475.5 232v16"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="m490 227-14.5 9M475.5 244l14.5 9"/>
+  <circle cx="480" cy="240" r="16" fill="none" stroke="#000" stroke-width="2"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="m482 247 4-2 1 7-6-4 2-1M310 240v17M310 283v7M270 270h26"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="3" d="M295.5 262v16"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="m310 257-14.5 9M295.5 274l14.5 9"/>
+  <circle cx="300" cy="270" r="16" fill="none" stroke="#000" stroke-width="2"/>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="m302 277 4-2 1 7-6-4 2-1M380 340h5M425 340h5"/>
+  <path fill="none" stroke="#000" stroke-linecap="square" stroke-width="2" d="M385 340h2l3-7 6 14 6-14 6 14 6-14 6 14 3-7h2"/>
+  <text x="405" y="326" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">10 kΩ</text>
+  <text x="405" y="314" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">R5</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M350 190h5M395 190h5"/>
+  <path fill="none" stroke="#000" stroke-linecap="square" stroke-width="2" d="M355 190h2l3-7 6 14 6-14 6 14 6-14 6 14 3-7h2"/>
+  <text x="375" y="176" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">1 kΩ</text>
+  <text x="375" y="164" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">R4</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M160 270h5M205 270h5"/>
+  <path fill="none" stroke="#000" stroke-linecap="square" stroke-width="2" d="M165 270h2l3-7 6 14 6-14 6 14 6-14 6 14 3-7h2"/>
+  <text x="185" y="256" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">1 kΩ</text>
+  <text x="185" y="244" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">R3</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M160 190h5M205 190h5"/>
+  <path fill="none" stroke="#000" stroke-linecap="square" stroke-width="2" d="M165 190h2l3-7 6 14 6-14 6 14 6-14 6 14 3-7h2"/>
+  <text x="185" y="176" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">10 kΩ</text>
+  <text x="185" y="164" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">R2</text>
+  <path stroke="#000" stroke-linecap="square" stroke-width="2" d="M160 130h5M205 130h5"/>
+  <path fill="none" stroke="#000" stroke-linecap="square" stroke-width="2" d="M165 130h2l3-7 6 14 6-14 6 14 6-14 6 14 3-7h2"/>
+  <text x="185" y="116" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">100 kΩ</text>
+  <text x="185" y="104" dominant-baseline="baseline" font-family="Arial" font-size="11" text-anchor="middle">R1</text>
+  <circle cx="310" cy="340" r="2" stroke="#000" stroke-width="2"/>
+  <circle cx="490" cy="130" r="2" stroke="#000" stroke-width="2"/>
+  <circle cx="310" cy="190" r="2" stroke="#000" stroke-width="2"/>
+</svg>

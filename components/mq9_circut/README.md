@@ -1,0 +1,73 @@
+> **Warning:** I would not consider this to be something to bet your life on.  I was annoyed by the unhelpful datasheet and after wamdering aroud the internet came up with this.
+
+# Theory of operation:
+
+The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement.  One where the heater is on and one off.  This is achived with a simple circut.
+
+## Circut:
+
+![schematic.svg](schematic.svg)
+
+## Calibration:
+
+The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use https://apps.automeris.io/wpd to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
+
+![sensor_spec_2019nov0103.jpg](sensor_spec_2019nov0103.jpg)
+
+This image is unhelpfully in a log10/10g10 scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
+
+Once these values are calculated it can be used to convert to the ppm values:
+
+```
+ppm = 10 ^ ((log10(Rs/R0) - b) / m)
+```
+
+Where `Rs` is found from the AD converter and `R0` is a base value for "clean air"
+
+
+## Notes on CO:
+
+| PPM     | Typical                                      |
+|---------|----------------------------------------------|
+| 0.1     | Outside rural area                           |
+| 0.5 - 5 | Typical indoor level, or outside urban areas |
+| 5 - 15  | Within feet of a gas stove or furnace        |
+| 15 - 20 | Typical concentration of furnace vent        |
+| 35      | EPA maximum outdoor level                    |
+| 50      | Maximum save level for 8 hours               |
+| 150     | Polluted city centers                        |
+| 400     | Enclosed space with car                      |
+| 1,500   | Close to fire                                |
+| 6,400   | Undiluted car exhaust                        |
+
+## Notes on TVOC:
+
+| PPB         | Typical   |
+|-------------|-----------|
+| 0 - 65      | Excellent |
+| 65 - 220    | Good      |
+| 220 - 660   | Moderate  |
+| 660 - 2200  | Poor      |
+| 2200 - 5500 | Unhealthy |
+
+
+# Usage in ESPHome:
+
+Match `AD` and `GPIO` to the schematic above.
+
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://gitlab.com/geiseri/esphome_extras.git
+    refresh: 0s
+
+sensor:
+  - platform: mq9_circut
+    control_pin: GPIO
+    adc_pin: AD
+    tvoc:
+      name: "TVOC"
+    carbon_monoxide:
+      name: "CO"
+```

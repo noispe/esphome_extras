@@ -5,6 +5,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/esphal.h"
+#include "calibration.h"
 
 namespace esphome {
 namespace mq9_circut {
@@ -13,8 +14,6 @@ class Mq9Circut : public sensor::Sensor,
                   public Component,
                   public voltage_sampler::VoltageSampler {
 public:
-  enum gas_type { CO, LPG, NH4 };
-
   void update_co();
   void update_tvoc();
   void setup() override;
@@ -32,7 +31,7 @@ public:
 protected:
   void start_calibration();
   void finish_calibration();
-  float calculate_ppm(gas_type type, float voltage);
+  float calculate_ppm(calibration::gas_type type, float voltage);
   void toggle_burnoff();
   uint count_ = 0;
   uint8_t adc_pin_;

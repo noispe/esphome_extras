@@ -13,7 +13,7 @@ void Mq9Circut::update_co() {
   float volts = this->sample();
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(),
            volts);
-  this->co_sensor_->publish_state(this->calculate_ppm(gas_type::CO, volts));
+  this->co_sensor_->publish_state(this->calculate_ppm(calibration::gas_type::CO, volts));
 }
 
 void Mq9Circut::update_tvoc() {
@@ -23,35 +23,20 @@ void Mq9Circut::update_tvoc() {
   float volts = this->sample();
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV",
            this->tvoc_sensor_->get_name().c_str(), volts);
-  this->tvoc_sensor_->publish_state(this->calculate_ppm(gas_type::LPG, volts) * 1000);
+  this->tvoc_sensor_->publish_state(this->calculate_ppm(calibration::gas_type::LPG, volts) * 1000);
 }
 
-float Mq9Circut::calculate_ppm(gas_type type, float voltage) {
+float Mq9Circut::calculate_ppm(calibration::gas_type type, float voltage) {
   float range = this->burnoff_ ? 5.0f : 1.5f;
   float rs_gas =
       ((range * 10.0f) / voltage) - 10.0f; // Get value of RS in a gas
   float ratio = rs_gas / this->r0_;        // Get ratio rs_gas/rs_air
-  float scale = 1.0f;
 
-  switch (type) {
-  case gas_type::CO:
-    scale = (logf(ratio) - 1.24f) / -0.45f;
-    break;
+  float ppm = powf(10, (log10f(ratio) - calibration::setpoints[type].b) / calibration::setpoints[type].m);
 
-  case gas_type::LPG:
-    scale = (logf(ratio) - 1.37f) / -0.46f;
-    break;
-
-  case gas_type::NH4:
-    scale = (logf(ratio) - 3.35f) / -0.37f;
-    break;
-
-  default:
-    break;
-  }
   ESP_LOGCONFIG(TAG, "calculate_ppm %d '%.2fV' scale: '%.2f'.", (int)type,
-                voltage, scale);
-  return powf(10, scale);
+                voltage, ppm);
+  return ppm;
 }
 
 void Mq9Circut::setup() {
