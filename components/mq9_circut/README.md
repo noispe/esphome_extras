@@ -53,7 +53,7 @@ Where `Rs` is found from the AD converter and `R0` is a base value for "clean ai
 
 # Usage in ESPHome:
 
-Match `AD` and `GPIO` to the schematic above.
+Match `AD` and `GPIO` to the schematic above.  `r0` can be provided or set to `0` in which case a niave attempt will be made to calibrate it based on 30 seconds of `burn off` readings.  
 
 ```yaml
 external_components:
@@ -66,6 +66,7 @@ sensor:
   - platform: mq9_circut
     control_pin: GPIO
     adc_pin: AD
+    r0: 0
     tvoc:
       name: "TVOC"
     carbon_monoxide:
