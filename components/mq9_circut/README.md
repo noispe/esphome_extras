@@ -6,8 +6,9 @@ The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement
 
 ## Circut:
 
-![schematic.svg](schematic.svg)
+![schematic.png](schematic.png)
 
+[circutjs circut](schematic.txt)
 ## Calibration:
 
 The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use https://apps.automeris.io/wpd to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
@@ -53,7 +54,7 @@ Where `Rs` is found from the AD converter and `R0` is a base value for "clean ai
 
 # Usage in ESPHome:
 
-Match `AD` and `GPIO` to the schematic above.  `r0` can be provided or set to `0` in which case a niave attempt will be made to calibrate it based on 30 seconds of `burn off` readings.  
+Match `AD` to the MQ-9 A0 and `GPIO` to the control in schematic above.  `r0` can be provided or set to `0` in which case a niave attempt will be made to calibrate it based on 30 seconds of `burn off` readings.
 
 ```yaml
 external_components:
