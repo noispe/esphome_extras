@@ -14,6 +14,8 @@ class Mq9Circut : public sensor::Sensor,
                   public Component,
                   public voltage_sampler::VoltageSampler {
 public:
+  static constexpr float Vc = 5.0f;
+  static constexpr float Rl = 10000.0f;
   void update_co();
   void update_tvoc();
   void setup() override;
@@ -31,7 +33,7 @@ public:
 protected:
   void start_calibration();
   void finish_calibration();
-  float calculate_ppm(calibration::gas_type type, float voltage);
+  float calculate_ppm(calibration::gas_type type, float VRl);
   void toggle_burnoff();
   uint count_ = 0;
   uint8_t adc_pin_;

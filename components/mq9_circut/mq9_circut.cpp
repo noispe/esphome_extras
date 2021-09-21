@@ -26,16 +26,13 @@ void Mq9Circut::update_tvoc() {
   this->tvoc_sensor_->publish_state(this->calculate_ppm(calibration::gas_type::LPG, volts) * 1000);
 }
 
-float Mq9Circut::calculate_ppm(calibration::gas_type type, float voltage) {
-  float range = this->burnoff_ ? 5.0f : 1.5f;
-  float rs_gas =
-      ((range * 10.0f) / voltage) - 10.0f; // Get value of RS in a gas
+float Mq9Circut::calculate_ppm(calibration::gas_type type, float VRl) {
+  float rs_gas = ((Vc - VRl) / VRl) * Rl; // Get value of RS in a gas
   float ratio = rs_gas / this->r0_;        // Get ratio rs_gas/rs_air
-
   float ppm = powf(10, (log10f(ratio) - calibration::setpoints[type].b) / calibration::setpoints[type].m);
 
   ESP_LOGCONFIG(TAG, "calculate_ppm %d '%.2fV' scale: '%.2f'.", (int)type,
-                voltage, ppm);
+                VRl, ppm);
   return ppm;
 }
 
@@ -47,14 +44,14 @@ void Mq9Circut::setup() {
     this->start_calibration();
   }
 
-  set_interval(300, [this]() {
+  set_interval(30000, [this]() {
+    this->count_++;
     if (this->calibrating_) {
-      this->count_++;
-      if (this->count_ < 10) { // warm up 30sec
+      if (this->count_ < 2) { // warm up 60sec
         return;
       }
       this->calibration_accumulator_ += this->sample();
-      if (this->count_ > 810) { // 2min
+      if (this->count_ > 10) { // 5min
         this->finish_calibration();
         this->count_ = 0;
       }
@@ -64,13 +61,12 @@ void Mq9Circut::setup() {
       this->start_calibration();
       return;
     }
-    this->count_++;
-    if (this->burnoff_ && this->count_ > 200) {
+    if (this->burnoff_ && this->count_ > 2) {
       ESP_LOGD(TAG, "Sample tvoc %d, %d", this->burnoff_, this->count_);
       this->toggle_burnoff();
       this->update_tvoc();
       this->count_ = 0;
-    } else if (!this->burnoff_ && this->count_ > 300) {
+    } else if (!this->burnoff_ && this->count_ > 3) {
       ESP_LOGD(TAG, "Sample co %d, %d", this->burnoff_, this->count_);
       this->update_co();
       this->count_ = 0;
