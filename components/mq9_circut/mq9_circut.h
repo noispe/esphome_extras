@@ -10,10 +10,43 @@
 namespace esphome {
 namespace mq9_circut {
 
+namespace detail {
+template<typename T, typename Tl, size_t N> class MovingAvg {
+ public:
+  static constexpr size_t size = N;
+  MovingAvg &accumulate(T sample) {
+    total_ += sample;
+    if (num_samples_ < N) {
+      samples_[num_samples_++] = sample;
+    } else {
+      T &oldest = samples_[num_samples_++ % N];
+      total_ -= oldest;
+      oldest = sample;
+    }
+    return *this;
+  }
+
+  T current() const { return total_ / std::min(num_samples_, N); }
+
+  MovingAvg &reset() {
+    num_samples_ = 0;
+    total_ = 0;
+    return *this;
+  }
+
+ private:
+  T samples_[N];
+  size_t num_samples_{0};
+  Tl total_{0};
+};
+
+}  // namespace detail
 class Mq9Circut : public sensor::Sensor,
                   public Component,
                   public voltage_sampler::VoltageSampler {
 public:
+  static constexpr float Vc = 5.0f;
+  static constexpr float Rl = 10000.0f;
   void update_co();
   void update_tvoc();
   void setup() override;
@@ -24,25 +57,25 @@ public:
   void set_control_pin(GPIOPin *pin) { control_pin_ = pin; }
   void set_tvoc_sensor(sensor::Sensor *sensor) { tvoc_sensor_ = sensor; }
   void set_co_sensor(sensor::Sensor *sensor) { co_sensor_ = sensor; }
+  void set_calibration_sensor(sensor::Sensor *sensor) { calibration_sensor_ = sensor; }
   void set_r0(float r0) { r0_ = r0; }
 #ifdef ARDUINO_ARCH_ESP8266
   std::string unique_id() override;
 #endif
 protected:
   void start_calibration();
-  void finish_calibration();
-  float calculate_ppm(calibration::gas_type type, float voltage);
+  float sample_calibration();
+  float calculate_ppm(calibration::gas_type type, float VRl);
   void toggle_burnoff();
   uint count_ = 0;
   uint8_t adc_pin_;
   bool burnoff_ = false;
-  bool calibrating_ = false;
-  int calibration_counter_ = 1000;
-  float calibration_accumulator_ = 0.0f;
   float r0_ = 0.0f;
+  detail::MovingAvg<float, float, 120> calibration_accumulator_{};
   GPIOPin *control_pin_ = nullptr;
   sensor::Sensor *tvoc_sensor_{nullptr};
   sensor::Sensor *co_sensor_{nullptr};
+  sensor::Sensor *calibration_sensor_{nullptr};
 };
 
 } // namespace mq9_circut

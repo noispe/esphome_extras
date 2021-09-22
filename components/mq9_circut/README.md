@@ -9,22 +9,38 @@ The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement
 ![schematic.png](schematic.png)
 
 [circutjs circut](https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcMBMcUHYMGZIA4UA2ATmIxAUgpABZsKBTAWjDACgAnEFFGkJwn1x8BfKmHhxO3XuBpDIfMPKjJ4bAC4hsaOUIQo9qiEzzQUpUnnlhChSNkL9s5y5cIJsYN04lUAJgwAZgCGAK4ANhrS2NbgxIY0eOIJxpJsAOa0yfGGCGCG3oZUkGwASjIigkaiqlQ0VEglUNAI5ZVGtuIqVIlULvTNMG0A7tqKRjrdYmxj2Abg9toLRVCz41X6hrWljnjL29Xz26zFa1zHIEcLzX5SAB7ahCZE2ngv9Ep8AGoAlgB2bEeyiQYAw+zAOUhEC+IAA4gAFACSAHl1pdVrElKlSo9HOJIIZsMQIBIkLC4QA5AAibAARtwEOQmCgIMSnO81o9MMRtPQvEhHLQ5CAALIARSYxHRC1qlxKMsM10KKH2pSAA)
+
+The datasheet gives a corrilation between the Rs and R0.  R0 being our calibration point.  Rs is found using the expression below:
+
+```
+ Rs\Rl = (Vc-VRl) / VRl
+```
+
+Given that the analog voltage reading is then used as `VRl`, Rl is noted at 10K, and Vc is 5V we need to solve for Rs:
+
+```
+Rs = ((Vc - VRl) / VRl) * 10000;
+```
+
+The actual concentration would end up being:
+
+```
+ppm = Rs / R0
+```
+
 ## Calibration:
 
 The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use https://apps.automeris.io/wpd to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
 
 ![sensor_spec_2019nov0103.jpg](sensor_spec_2019nov0103.jpg)
 
-This image is unhelpfully in a log10/10g10 scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
+The image at first glance looks to have straight lines.  So the `y=mx+b` seems to be a great fit. Rs/R0 would be Y and ppm would be X. Unhelpfully it is in a log10/10g10 scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
 
 Once these values are calculated it can be used to convert to the ppm values:
 
 ```
 ppm = 10 ^ ((log10(Rs/R0) - b) / m)
 ```
-
-Where `Rs` is found from the AD converter and `R0` is a base value for "clean air"
-
 
 ## Notes on CO:
 
