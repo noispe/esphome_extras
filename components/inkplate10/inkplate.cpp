@@ -99,9 +99,9 @@ void HOT Inkplate10::draw_absolute_pixel_internal(int x, int y, Color color) {
     return;
 
   if (this->greyscale_) {
-    int x1 = x / 2;
-    int x_sub = x % 2;
-    uint32_t pos = (x1 + y * (this->get_width_internal() / 2));
+    int x1 = x >> 1;
+    int x_sub = x & 1;
+    uint32_t pos = (x1 + y * (this->get_width_internal() >> 1));
     uint8_t current = this->buffer_[pos];
 
     // float px = (0.2126 * (color.red / 255.0)) + (0.7152 * (color.green / 255.0)) + (0.0722 * (color.blue / 255.0));
@@ -112,9 +112,9 @@ void HOT Inkplate10::draw_absolute_pixel_internal(int x, int y, Color color) {
     this->buffer_[pos] = (pixelMaskGLUT[x_sub] & current) | (x_sub ? gs : gs << 4);
 
   } else {
-    int x1 = x / 8;
-    int x_sub = x % 8;
-    uint32_t pos = (x1 + y * (this->get_width_internal() / 8));
+    int x1 = x >> 3;
+    int x_sub = x & 7;
+    uint32_t pos = (x1 + y * (this->get_width_internal() >> 3));
     uint8_t current = this->partial_buffer_[pos];
     this->partial_buffer_[pos] = (~pixelMaskLUT[x_sub] & current) | (color.is_on() ? 0 : pixelMaskLUT[x_sub]);
   }
