@@ -253,12 +253,12 @@ void Inkplate10::display1b_() {
   for (int k = 0; k < 5; k++)
   {
     _pos = this->get_buffer_length_() - 1;
-    vscan_start();
+    vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++)
     {
         buffer_value = ~(*(this->buffer_ + _pos));
         data = LUTW[(buffer_value >> 4) & 0x0F];
-        hscan_start(this->get_pin_address_(data));
+        hscan_start_(this->get_pin_address_(data));
         data = LUTW[buffer_value & 0x0F];
         GPIO.out_w1ts = this->get_pin_address_(data) | clock;
         GPIO.out_w1tc = DATA | clock;
