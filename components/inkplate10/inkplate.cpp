@@ -260,7 +260,7 @@ void Inkplate10::display1b_() {
       GPIO.out_w1tc = get_data_pin_mask_() | clock;
       _pos--;
       for (int j = 0, jm = (this->get_width_internal() / 8) - 1; j < jm; j++) {
-        buffer_value = ~(*(DMemoryNew + _pos));
+        buffer_value = ~(*(this->buffer_ + _pos));
         data = LUTB[(buffer_value >> 4) & 0x0F];
         GPIO.out_w1ts = this->get_pin_address_(data) | clock;
         GPIO.out_w1tc = get_data_pin_mask_() | clock;
