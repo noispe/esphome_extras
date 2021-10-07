@@ -116,6 +116,13 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
     return data;
   }
 
+  uint32_t get_pin_address_(uint8_t data) const {
+      return ((data & B00000011) << 4) |
+             (((data & B00001100) >> 2) << 18) |
+             (((data & B00010000) >> 4) << 23) |
+             (((data & B11100000) >> 5) << 25);
+  }
+
   uint8_t panel_on_ = 0;
   uint8_t temperature_;
 
@@ -149,6 +156,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   GPIOPin *spv_pin_;
   GPIOPin *vcom_pin_;
   GPIOPin *wakeup_pin_;
+
 };
 
 }  // namespace inkplate10
