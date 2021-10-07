@@ -290,10 +290,10 @@ void Inkplate10::display3b_() {
   unsigned long start_time = millis();
 
   eink_on_();
-  clean(0, 10);
-  clean(1, 10);
-  clean(0, 10);
-  clean(1, 10);
+  clean_fast_(0, 10);
+  clean_fast_(1, 10);
+  clean_fast_(0, 10);
+  clean_fast_(1, 10);
   // buffer_ptr dp
   //
   uint32_t clock = (1 << this->cl_pin_->get_pin());
