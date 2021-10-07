@@ -9,7 +9,7 @@ namespace esphome {
 namespace inkplate10 {
 
 static const char *const TAG = "inkplate";
-
+static const uint32_t DATA = 0x0E8C0030
 void Inkplate10::setup() {
   this->initialize_();
 
@@ -236,7 +236,7 @@ void Inkplate10::display1b_() {
   // DMemoryNew  this->buffer_
   // _partial this->partial_buffer_
   uint32_t _pos;
-  uint32_t send;
+  //uint32_t send;
   uint8_t data;
   uint8_t buffer_value; //dram
   const uint8_t *buffer_ptr; //DMemoryNewPtr
@@ -257,16 +257,16 @@ void Inkplate10::display1b_() {
       hscan_start_(this->get_pin_address_(data));
       data = LUTB[buffer_value & 0x0F];
       GPIO.out_w1ts = this->get_pin_address_(data) | clock;
-      GPIO.out_w1tc = get_data_pin_mask_() | clock;
+      GPIO.out_w1tc = DATA | clock;
       _pos--;
       for (int j = 0, jm = (this->get_width_internal() / 8) - 1; j < jm; j++) {
         buffer_value = ~(*(this->buffer_ + _pos));
         data = LUTB[(buffer_value >> 4) & 0x0F];
         GPIO.out_w1ts = this->get_pin_address_(data) | clock;
-        GPIO.out_w1tc = get_data_pin_mask_() | clock;
+        GPIO.out_w1tc = DATA | clock;
         data = LUTB[buffer_value & 0x0F];
         GPIO.out_w1ts = this->get_pin_address_(data) | clock;
-        GPIO.out_w1tc = get_data_pin_mask_() | clock;
+        GPIO.out_w1tc = DATA | clock;
         _pos--;
       }
       GPIO.out_w1ts = clock;
@@ -320,7 +320,7 @@ void Inkplate10::display3b_() {
 
       hscan_start_(this->get_pin_address_(pixel));
       GPIO.out_w1ts = this->get_pin_address_(pixel2) | clock;
-      GPIO.out_w1tc = get_data_pin_mask_() | clock;
+      GPIO.out_w1tc = DATA | clock;
 
       for (int j = 0, jm = (this->get_width_internal() / 8) - 1; j < jm; j++) {
         pix1 = (*buffer_ptr--);
@@ -333,10 +333,10 @@ void Inkplate10::display3b_() {
                  (waveform3Bit[pix4 & 0x07][k] << 2) | (waveform3Bit[(pix4 >> 4) & 0x07][k] << 0);
 
         GPIO.out_w1ts = this->get_pin_address_(pixel) | clock;
-        GPIO.out_w1tc = get_data_pin_mask_() | clock;
+        GPIO.out_w1tc = DATA| clock;
 
         GPIO.out_w1ts = this->get_pin_address_(pixel2) | clock;
-        GPIO.out_w1tc = get_data_pin_mask_() | clock;
+        GPIO.out_w1tc = DATA | clock;
       }
       GPIO.out_w1ts = clock;
       GPIO.out_w1tc = get_data_pin_mask_() | clock;
@@ -389,7 +389,7 @@ bool Inkplate10::partial_update_() {
         data = *(data_ptr--);
         send = this->get_pin_address_(data) | clock;
         GPIO.out_w1ts = send;
-        GPIO.out_w1tc = get_data_pin_mask_() | clock;
+        GPIO.out_w1tc = DATA | clock;
       }
       GPIO.out_w1ts = send;
       GPIO.out_w1tc = get_data_pin_mask_() | clock;
