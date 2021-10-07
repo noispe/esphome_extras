@@ -276,7 +276,7 @@ void Inkplate10::display1b_() {
         }
         GPIO.out_w1ts = clock;
         GPIO.out_w1tc = DATA | clock;
-        vscan_end();
+        vscan_end_();
     }
     delayMicroseconds(230);
   }
