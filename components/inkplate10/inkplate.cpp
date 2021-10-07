@@ -9,7 +9,7 @@ namespace esphome {
 namespace inkplate10 {
 
 static const char *const TAG = "inkplate";
-static const uint32_t DATA = 0x0E8C0030
+static const uint32_t DATA = 0x0E8C0030;
 void Inkplate10::setup() {
   this->initialize_();
 
