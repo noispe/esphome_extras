@@ -64,7 +64,7 @@ public:
   void set_display_data_1_pin(InternalGPIOPin *data) {
     this->display_data_1_pin_ = data;
   }
-  void set_display_data_2_pin(GPIInternalGPIOPin OPin *data) {
+  void set_display_data_2_pin(InternalGPIOPin OPin *data) {
     this->display_data_2_pin_ = data;
   }
   void set_display_data_3_pin(InternalGPIOPin *data) {

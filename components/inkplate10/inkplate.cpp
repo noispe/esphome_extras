@@ -199,7 +199,7 @@ void Inkplate10::eink_on_() {
 
   delay(2);
 
-  this->read_byte(0x00, &temperature_, 0);
+  this->read_register(0x00, nullptr, 0);
 
   this->le_pin_->digital_write(false);
   this->oe_pin_->digital_write(false);
@@ -212,7 +212,7 @@ void Inkplate10::eink_on_() {
 }
 void Inkplate10::fill(Color color) {
   ESP_LOGV(TAG, "Fill called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   if (this->greyscale_) {
     uint8_t fill = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) +
@@ -228,7 +228,7 @@ void Inkplate10::fill(Color color) {
 }
 void Inkplate10::display() {
   ESP_LOGV(TAG, "Display called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   if (this->greyscale_) {
     this->display3b_();
@@ -243,7 +243,7 @@ void Inkplate10::display() {
 }
 void Inkplate10::display1b_() {
   ESP_LOGV(TAG, "Display1b called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
   // DMemoryNew  this->buffer_
@@ -302,7 +302,7 @@ void Inkplate10::display1b_() {
 }
 void Inkplate10::display3b_() {
   ESP_LOGV(TAG, "Display3b called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   eink_on_();
   clean_fast_(0, 10);
@@ -374,7 +374,7 @@ void Inkplate10::display3b_() {
 }
 bool Inkplate10::partial_update_() {
   ESP_LOGV(TAG, "Partial update called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
   if (this->greyscale_)
     return false;
   if (this->block_partial_)
@@ -483,7 +483,7 @@ void Inkplate10::vscan_end_() {
 }
 void Inkplate10::clean() {
   ESP_LOGV(TAG, "Clean called");
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   eink_on_();
   clean_fast_(0, 1);  // White
@@ -496,7 +496,7 @@ void Inkplate10::clean() {
 }
 void Inkplate10::clean_fast_(uint8_t c, uint8_t rep) {
   ESP_LOGV(TAG, "Clean fast called with: (%d, %d)", c, rep);
-  uin32_t start_time = millis();
+  uint32_t start_time = millis();
 
   eink_on_();
   uint8_t data = 0;
