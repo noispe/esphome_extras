@@ -1,5 +1,8 @@
 #include "mq9_circut.h"
 #include "esphome/core/log.h"
+#ifdef USE_ESP32
+#include "driver/adc.h"
+#endif
 
 namespace esphome {
 namespace mq9_circut {
@@ -10,7 +13,7 @@ void Mq9Circut::update_co() {
   if (this->co_sensor_ == nullptr) {
     return;
   }
-  float volts = this->sample();
+  float volts = this->adc_->sample();
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(),
            volts);
   this->co_sensor_->publish_state(
@@ -21,7 +24,7 @@ void Mq9Circut::update_tvoc() {
   if (this->tvoc_sensor_ == nullptr) {
     return;
   }
-  float volts = this->sample();
+  float volts = this->adc_->sample();
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fV",
            this->tvoc_sensor_->get_name().c_str(), volts);
   this->tvoc_sensor_->publish_state(
@@ -42,7 +45,7 @@ float Mq9Circut::calculate_ppm(calibration::gas_type type, float VRl) {
 void Mq9Circut::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MQ9 circut '%s'...", this->get_name().c_str());
 #ifdef ARDUINO_ARCH_ESP32
-  analogSetPinAttenuation(this->adc_pin_, ADC_11db);
+  this->adc_->set_attenuation(ADC_ATTEN_DB_11);
 #endif
   this->control_pin_->setup();
   this->control_pin_->digital_write(false);
@@ -71,7 +74,7 @@ void Mq9Circut::setup() {
 
 void Mq9Circut::dump_config() {
   ESP_LOGCONFIG(TAG, "MQ9 circut:");
-  ESP_LOGCONFIG(TAG, "ADC Pin: %u", this->adc_pin_);
+  LOG_SENSOR(TAG, "ADC", this->adc_);
   ESP_LOGCONFIG(TAG, "R0: %0.2f", this->r0_);
   LOG_PIN("Control Pin:", this->control_pin_);
   LOG_SENSOR(TAG, "TVOC", this->tvoc_sensor_);
@@ -81,18 +84,6 @@ void Mq9Circut::dump_config() {
 void Mq9Circut::toggle_burnoff() {
   this->burnoff_ = !this->burnoff_;
   this->control_pin_->digital_write(!this->burnoff_);
-}
-
-float Mq9Circut::sample() {
-#ifdef ARDUINO_ARCH_ESP32
-  float value_v = analogRead(this->adc_pin_) / 4095.0f; // NOLINT
-  value_v *= 3.9f;
-  return value_v;
-#endif
-
-#ifdef ARDUINO_ARCH_ESP8266
-  return analogRead(this->adc_pin_) / 1024.0f; // NOLINT
-#endif
 }
 
 float Mq9Circut::get_setup_priority() const { return setup_priority::DATA; }
@@ -107,7 +98,7 @@ void Mq9Circut::start_calibration() {
 
 float Mq9Circut::sample_calibration() {
   ESP_LOGD(TAG, "Finish R0 calibration sample");
-  this->calibration_accumulator_.accumulate(this->sample());
+  this->calibration_accumulator_.accumulate(this->adc_->sample());
   float r0 = 0.0f;
   float sensor_volt = this->calibration_accumulator_.current();
   if (sensor_volt != 0.0f) {
@@ -117,10 +108,6 @@ float Mq9Circut::sample_calibration() {
   }
   return r0;
 }
-
-#ifdef ARDUINO_ARCH_ESP8266
-std::string Mq9Circut::unique_id() { return get_mac_address() + "-mq9"; }
-#endif
 
 } // namespace mq9_circut
 

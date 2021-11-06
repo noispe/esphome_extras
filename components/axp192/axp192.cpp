@@ -1,4 +1,5 @@
 #include "axp192.h"
+#include <esp_sleep.h>
 
 AXP192::AXP192(esphome::i2c::I2CDevice *i2c) : i2c_(i2c)
 {
@@ -23,7 +24,7 @@ void AXP192::begin(bool disableLDO2, bool disableLDO3, bool disableRTC, bool dis
     Write1Byte(0x33, 0xc0);
 
     // Depending on configuration enable LDO2, LDO3, DCDC1, DCDC3.
-    byte buf = (Read8bit(0x12) & 0xef) | 0x4D;
+    uint8_t buf = (Read8bit(0x12) & 0xef) | 0x4D;
     if (disableLDO3)
         buf &= ~(1 << 3);
     if (disableLDO2)
@@ -365,7 +366,7 @@ uint8_t AXP192::GetWarningLeve(void)
 void AXP192::DeepSleep(uint64_t time_in_us)
 {
     SetSleep();
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)37, LOW);
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)37, 0);
     if (time_in_us > 0)
     {
         esp_sleep_enable_timer_wakeup(time_in_us);
@@ -628,7 +629,7 @@ void AXP192::SetAdcRate(uint8_t rate)
     Write1Byte(0x84, buf);
 }
 
-// AXP192 have a 6 byte storage, when the power is still valid, the data will not be lost
+// AXP192 have a 6 uint8_t storage, when the power is still valid, the data will not be lost
 void AXP192::Read6BytesStorage(uint8_t *bufPtr)
 {
     // Address from 0x06 - 0x0B
@@ -636,7 +637,7 @@ void AXP192::Read6BytesStorage(uint8_t *bufPtr)
     ReadBuff(0x06, 6, bufPtr);
 }
 
-// AXP192 have a 6 byte storage, when the power is still valid, the data will not be lost
+// AXP192 have a 6 uint8_t storage, when the power is still valid, the data will not be lost
 void AXP192::Write6BytesStorage(uint8_t *bufPtr)
 {
     // Address from 0x06 - 0x0B

@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
-from esphome.components import sensor, voltage_sampler
+from esphome.components import sensor
 from esphome.const import (
     CONF_ID,
     UNIT_PARTS_PER_MILLION,
@@ -14,23 +14,23 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT
 )
 
-AUTO_LOAD = ["voltage_sampler"]
+from esphome.components.adc import sensor as adc
 
-CONF_ADC_PIN = "adc_pin"
+CONF_ADC = "adc"
 CONF_CONTROL_PIN = "control_pin"
 CONF_CO = "carbon_monoxide"
 CONF_R0 = "r0"
 CONF_R0_CALIBRATE = "r0_calibrate"
 mq9_circut_ns = cg.esphome_ns.namespace("mq9_circut")
 Mq9Circut = mq9_circut_ns.class_(
-    "Mq9Circut", sensor.Sensor, cg.Component, voltage_sampler.VoltageSampler
+    "Mq9Circut", sensor.Sensor, cg.Component
 )
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(Mq9Circut),
-            cv.Required(CONF_ADC_PIN): pins.analog_pin,
+            cv.Required(CONF_ADC): cv.use_id(adc.ADCSensor),
             cv.Required(CONF_CONTROL_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_R0): cv.float_range(
                 min=0.001, max=1000
@@ -62,7 +62,8 @@ CONFIG_SCHEMA = cv.All(
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    cg.add(var.set_adc_pin(config[CONF_ADC_PIN]))
+    a = await cg.get_variable(config[CONF_ADC])
+    cg.add(var.set_adc(a))
     control_pin = await cg.gpio_pin_expression(config[CONF_CONTROL_PIN])
     cg.add(var.set_control_pin(control_pin))
     if CONF_R0 in config:
