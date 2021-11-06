@@ -1,25 +1,26 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/hal.h"
 #include "esphome/components/i2c/i2c.h"
 #include "esphome/components/display/display_buffer.h"
 
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef USE_ESP32_FRAMEWORK_ARDUINO
 
 namespace esphome {
 namespace inkplate10 {
 
 class Inkplate10 : public PollingComponent, public display::DisplayBuffer, public i2c::I2CDevice {
  public:
-  const uint8_t LUT2[16] = {B10101010, B10101001, B10100110, B10100101, B10011010, B10011001, B10010110, B10010101,
-                            B01101010, B01101001, B01100110, B01100101, B01011010, B01011001, B01010110, B01010101};
-  const uint8_t LUTW[16] = {B11111111, B11111110, B11111011, B11111010, B11101111, B11101110, B11101011, B11101010,
-                            B10111111, B10111110, B10111011, B10111010, B10101111, B10101110, B10101011, B10101010};
-  const uint8_t LUTB[16] = {B11111111, B11111101, B11110111, B11110101, B11011111, B11011101, B11010111, B11010101,
-                            B01111111, B01111101, B01110111, B01110101, B01011111, B01011101, B01010111, B01010101};
-  const uint8_t pixelMaskLUT[8] = {B00000001, B00000010, B00000100, B00001000,
-                                   B00010000, B00100000, B01000000, B10000000};
-  const uint8_t pixelMaskGLUT[2] = {B00001111, B11110000};
+  const uint8_t LUT2[16] = {0b10101010, 0b10101001, 0b10100110, 0b10100101, 0b10011010, 0b10011001, 0b10010110, 0b10010101,
+                            0b01101010, 0b01101001, 0b01100110, 0b01100101, 0b01011010, 0b01011001, 0b01010110, 0b01010101};
+  const uint8_t LUTW[16] = {0b11111111, 0b11111110, 0b11111011, 0b11111010, 0b11101111, 0b11101110, 0b11101011, 0b11101010,
+                            0b10111111, 0b10111110, 0b10111011, 0b10111010, 0b10101111, 0b10101110, 0b10101011, 0b10101010};
+  const uint8_t LUTB[16] = {0b11111111, 0b11111101, 0b11110111, 0b11110101, 0b11011111, 0b11011101, 0b11010111, 0b11010101,
+                            0b01111111, 0b01111101, 0b01110111, 0b01110101, 0b01011111, 0b01011101, 0b01010111, 0b01010101};
+  const uint8_t pixelMaskLUT[8] = {0b00000001, 0b00000010, 0b00000100, 0b00001000,
+                                   0b00010000, 0b00100000, 0b01000000, 0b10000000};
+  const uint8_t pixelMaskGLUT[2] = {0b00001111, 0b11110000};
   const uint8_t waveform3Bit[8][8] = {{0, 0, 0, 0, 0, 0, 1, 0}, {0, 0, 2, 2, 2, 1, 1, 0}, {0, 2, 1, 1, 2, 2, 1, 0},
                                       {1, 2, 2, 1, 2, 2, 1, 0}, {0, 2, 1, 2, 2, 2, 1, 0}, {2, 2, 2, 2, 2, 2, 1, 0},
                                       {0, 0, 0, 0, 2, 1, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
@@ -117,10 +118,10 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   }
 
   uint32_t get_pin_address_(uint8_t data) const {
-      return ((data & B00000011) << 4) |
-             (((data & B00001100) >> 2) << 18) |
-             (((data & B00010000) >> 4) << 23) |
-             (((data & B11100000) >> 5) << 25);
+      return ((data & 0b00000011) << 4) |
+             (((data & 0b00001100) >> 2) << 18) |
+             (((data & 0b00010000) >> 4) << 23) |
+             (((data & 0b11100000) >> 5) << 25);
   }
 
   uint8_t panel_on_ = 0;
@@ -162,4 +163,4 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
 }  // namespace inkplate10
 }  // namespace esphome
 
-#endif
+#endif  // USE_ESP32_FRAMEWORK_ARDUINO
