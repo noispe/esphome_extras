@@ -40,20 +40,20 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   void set_partial_updating(bool partial_updating) { this->partial_updating_ = partial_updating; }
   void set_full_update_every(uint32_t full_update_every) { this->full_update_every_ = full_update_every; }
 
-  void set_display_data_0_pin(GPIOPin *data) { this->display_data_0_pin_ = data; }
-  void set_display_data_1_pin(GPIOPin *data) { this->display_data_1_pin_ = data; }
-  void set_display_data_2_pin(GPIOPin *data) { this->display_data_2_pin_ = data; }
-  void set_display_data_3_pin(GPIOPin *data) { this->display_data_3_pin_ = data; }
-  void set_display_data_4_pin(GPIOPin *data) { this->display_data_4_pin_ = data; }
-  void set_display_data_5_pin(GPIOPin *data) { this->display_data_5_pin_ = data; }
-  void set_display_data_6_pin(GPIOPin *data) { this->display_data_6_pin_ = data; }
-  void set_display_data_7_pin(GPIOPin *data) { this->display_data_7_pin_ = data; }
+  void set_display_data_0_pin(InternalGPIOPin  *data) { this->display_data_0_pin_ = data; }
+  void set_display_data_1_pin(InternalGPIOPin  *data) { this->display_data_1_pin_ = data; }
+  void set_display_data_2_pin(GPIInternalGPIOPin OPin *data) { this->display_data_2_pin_ = data; }
+  void set_display_data_3_pin(InternalGPIOPin  *data) { this->display_data_3_pin_ = data; }
+  void set_display_data_4_pin(InternalGPIOPin  *data) { this->display_data_4_pin_ = data; }
+  void set_display_data_5_pin(InternalGPIOPin  *data) { this->display_data_5_pin_ = data; }
+  void set_display_data_6_pin(InternalGPIOPin  *data) { this->display_data_6_pin_ = data; }
+  void set_display_data_7_pin(InternalGPIOPin  *data) { this->display_data_7_pin_ = data; }
 
   void set_ckv_pin(GPIOPin *ckv) { this->ckv_pin_ = ckv; }
-  void set_cl_pin(GPIOPin *cl) { this->cl_pin_ = cl; }
+  void set_cl_pin(InternalGPIOPin  *cl) { this->cl_pin_ = cl; }
   void set_gpio0_enable_pin(GPIOPin *gpio0_enable) { this->gpio0_enable_pin_ = gpio0_enable; }
   void set_gmod_pin(GPIOPin *gmod) { this->gmod_pin_ = gmod; }
-  void set_le_pin(GPIOPin *le) { this->le_pin_ = le; }
+  void set_le_pin(InternalGPIOPin  *le) { this->le_pin_ = le; }
   void set_oe_pin(GPIOPin *oe) { this->oe_pin_ = oe; }
   void set_powerup_pin(GPIOPin *powerup) { this->powerup_pin_ = powerup; }
   void set_sph_pin(GPIOPin *sph) { this->sph_pin_ = sph; }
@@ -137,20 +137,20 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   bool greyscale_;
   bool partial_updating_;
 
-  GPIOPin *display_data_0_pin_;
-  GPIOPin *display_data_1_pin_;
-  GPIOPin *display_data_2_pin_;
-  GPIOPin *display_data_3_pin_;
-  GPIOPin *display_data_4_pin_;
-  GPIOPin *display_data_5_pin_;
-  GPIOPin *display_data_6_pin_;
-  GPIOPin *display_data_7_pin_;
+  InternalGPIOPin  *display_data_0_pin_;
+  InternalGPIOPin  *display_data_1_pin_;
+  InternalGPIOPin  *display_data_2_pin_;
+  InternalGPIOPin  *display_data_3_pin_;
+  InternalGPIOPin  *display_data_4_pin_;
+  InternalGPIOPin  *display_data_5_pin_;
+  InternalGPIOPin  *display_data_6_pin_;
+  InternalGPIOPin  *display_data_7_pin_;
 
   GPIOPin *ckv_pin_;
-  GPIOPin *cl_pin_;
+  InternalGPIOPin  *cl_pin_;
   GPIOPin *gpio0_enable_pin_;
   GPIOPin *gmod_pin_;
-  GPIOPin *le_pin_;
+  InternalGPIOPin  *le_pin_;
   GPIOPin *oe_pin_;
   GPIOPin *powerup_pin_;
   GPIOPin *sph_pin_;
