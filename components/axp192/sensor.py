@@ -20,4 +20,3 @@ async def to_code(config):
     await sensor.register_sensor(var, config)
     axp = await cg.get_variable(config[CONF_AXP192_ID])
     cg.add(axp.set_batterylevel_sensor(var))
-

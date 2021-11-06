@@ -26,7 +26,8 @@ float WaveshareDustSensor::get_setup_priority() const { return setup_priority::D
 void WaveshareDustSensor::update() {
   this->iled_pin_->digital_write(true);
   delayMicroseconds(100);
-  // Note: The output voltage has been divided (see schematic), so that the voltage measurement should x 11 to get the actual voltage.
+  // Note: The output voltage has been divided (see schematic), so that the voltage measurement should x 11 to get the
+  // actual voltage.
   float volts = this->adc_->sample() * 11.0f * 1000.0f;  // to mV
   this->iled_pin_->digital_write(false);
   ESP_LOGD(TAG, "'%s': Got voltage=%.2fmV", this->get_name().c_str(), volts);

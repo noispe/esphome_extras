@@ -6,7 +6,8 @@ from . import axp192_ns, axp192_component, CONF_AXP192_ID
 
 DEPENDENCIES = ['axp192']
 
-axp192_binary_sensor = axp192_ns.class_('axp192_binary_sensor', binary_sensor.BinarySensor, cg.Component)
+axp192_binary_sensor = axp192_ns.class_(
+    'axp192_binary_sensor', binary_sensor.BinarySensor, cg.Component)
 
 monitor_type = axp192_ns.enum('monitor_type')
 MONITOR_TYPE = {
@@ -23,6 +24,7 @@ CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend({
     cv.Required(CONF_AXP192_ID): cv.use_id(axp192_component),
     cv.Required(CONF_TYPE): cv.enum(MONITOR_TYPE, upper=True, space='_')
 }).extend(cv.COMPONENT_SCHEMA)
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
