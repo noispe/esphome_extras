@@ -71,8 +71,6 @@ void Inkplate10::setup() {
 
   this->initialize_();
 
-  this->clean();
-  this->display();
 }
 
 void Inkplate10::initialize_() {
@@ -139,6 +137,7 @@ size_t Inkplate10::get_buffer_length_() {
   }
 }
 void Inkplate10::update() {
+  Profile p("Inkplate10::update");
   this->do_update_();
 
   if (this->full_update_every_ > 0 && this->partial_updates_ >= this->full_update_every_) {
@@ -259,7 +258,7 @@ void Inkplate10::eink_on_() {
     delay(1);
   } while ((this->read_byte(0x0F) != 0b11111010) && (millis() - timer) < 250);
   if ((millis() - timer) >= 250) {
-    ESP_LOGV(TAG, "Eink not ready");
+    ESP_LOGE(TAG, "Eink not ready");
     this->wakeup_pin_->digital_write(false);
     this->powerup_pin_->digital_write(false);
     this->vcom_pin_->digital_write(false);
@@ -272,7 +271,6 @@ void Inkplate10::eink_on_() {
 }
 
 void Inkplate10::fill(Color color) {
-  ESP_LOGV(TAG, "Fill called");
   Profile p("Inkplate10::fill");
 
   if (this->greyscale_) {
@@ -302,9 +300,6 @@ void Inkplate10::display1b_() {
 
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
 
-  uint32_t _pos;
-  uint8_t data;
-  uint8_t dram;
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
   eink_on_();
@@ -314,11 +309,13 @@ void Inkplate10::display1b_() {
   clean_fast_(0, 10);
   clean_fast_(1, 10);
   for (int k = 0; k < 5; k++) {
-    _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
+    p.status("loop k");
+    uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
     vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
-      dram = ~(*(this->buffer_ + _pos));
-      data = LUTW[(dram >> 4) & 0x0F];
+      p.status("loop i");
+      uint8_t dram = ~(*(this->buffer_ + _pos));
+      uint8_t data = LUTW[(dram >> 4) & 0x0F];
       hscan_start_(pinLUT_[data]);
       data = LUTW[dram & 0x0F];
       GPIO.out_w1ts = pinLUT_[data] | CL;
@@ -454,6 +451,7 @@ bool Inkplate10::partial_update_() {
   return true;
 }
 void Inkplate10::vscan_start_() {
+  Profile p("Inkplate10::vscan_start_");
   this->ckv_pin_->digital_write(true);
   delayMicroseconds(7);
   this->spv_pin_->digital_write(false);
@@ -478,6 +476,7 @@ void Inkplate10::vscan_start_() {
 }
 
 void Inkplate10::hscan_start_(uint32_t d) {
+  Profile p("Inkplate10::hscan_start_");
   this->sph_pin_->digital_write(false);
   GPIO.out_w1ts = (d) | (1 << this->cl_pin_->get_pin());
   GPIO.out_w1tc = DATA | (1 << this->cl_pin_->get_pin());
@@ -485,6 +484,7 @@ void Inkplate10::hscan_start_(uint32_t d) {
   this->ckv_pin_->digital_write(true);
 }
 void Inkplate10::vscan_end_() {
+  Profile p("Inkplate10::vscan_end_");
   this->ckv_pin_->digital_write(false);
   this->le_pin_->digital_write(true);
   this->le_pin_->digital_write(false);
