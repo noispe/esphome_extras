@@ -34,6 +34,51 @@ void Profile::status(const std::string &message) {
   ESP_LOGV(TAG, "%s at %s (%ums)", name_.c_str(), message.c_str(), millis() - start_time_);
 }
 
+#define CL_SET \
+  { GPIO.out_w1ts = (1 << this->cl_pin_->get_pin()); }
+#define CL_CLEAR \
+  { GPIO.out_w1tc = (1 << this->cl_pin_->get_pin()); }
+#define CKV 0x01
+#define CKV_SET \
+  { GPIO.out1_w1ts.val = 0x01; }
+#define CKV_CLEAR \
+  { GPIO.out1_w1tc.val = 0x01; }
+#define SPH_SET \
+  { GPIO.out1_w1ts.val = 0x02; }
+#define SPH_CLEAR \
+  { GPIO.out1_w1tc.val = 0x02; }
+#define LE_SET \
+  { GPIO.out_w1ts = (1 << this->le_pin_->get_pin()); }
+#define LE_CLEAR \
+  { GPIO.out_w1tc = (1 << this->le_pin_->get_pin()); }
+#define OE_SET \
+  { this->oe_pin_->digital_write(true); }
+#define OE_CLEAR \
+  { this->oe_pin_->digital_write(false); }
+#define GMOD_SET \
+  { this->gmod_pin_->digital_write(true); }
+#define GMOD_CLEAR \
+  { this->gmod_pin_->digital_write(false); }
+#define SPV_SET \
+  { this->spv_pin_->digital_write(true); }
+#define SPV_CLEAR \
+  { this->spv_pin_->digital_write(false); }
+#define WAKEUP 3
+#define WAKEUP_SET \
+  { this->wakeup_pin_->digital_write(true); }
+#define WAKEUP_CLEAR \
+  { this->wakeup_pin_->digital_write(false); }
+
+#define PWRUP_SET \
+  { this->powerup_pin_->digital_write(true); }
+#define PWRUP_CLEAR \
+  { this->powerup_pin_->digital_write(false); }
+#define VCOM 5
+#define VCOM_SET \
+  { this->vcom_pin_->digital_write(true); }
+#define VCOM_CLEAR \
+  { this->vcom_pin_->digital_write(true); }
+
 void Inkplate10::setup() {
   Profile p("Inkplate10::setup");
   this->vcom_pin_->setup();
@@ -71,7 +116,6 @@ void Inkplate10::setup() {
   this->display_data_7_pin_->setup();
 
   this->initialize_();
-
 }
 
 void Inkplate10::initialize_() {
@@ -205,23 +249,22 @@ void Inkplate10::eink_off_() {
     return;
   Profile p("Inkplate10::eink_off_");
 
-  this->gmod_pin_->digital_write(false);
-  this->oe_pin_->digital_write(false);
+  OE_CLEAR;
+  GMOD_CLEAR;
 
   GPIO.out &= ~(DATA | (1 << this->cl_pin_->get_pin()) | (1 << this->le_pin_->get_pin()));
-  this->ckv_pin_->digital_write(false);
-  this->sph_pin_->digital_write(false);
-  this->spv_pin_->digital_write(false);
+  CKV_CLEAR;
+  SPH_CLEAR;
+  SPV_CLEAR;
 
   // Put TPS65186 into standby mode (leaving 3V3 SW active)
-  this->vcom_pin_->digital_write(false);
+  VCOM_CLEAR;
   this->write_byte(0x01, 0x6F);
   delay(100);
 
   // Disable 3V3 to the panel
   this->write_byte(0x01, 0x4F);
-  this->wakeup_pin_->digital_write(false);
-  this->powerup_pin_->digital_write(false);
+  WAKEUP_CLEAR;
 
   pins_z_state_();
   panel_on_ = 0;
@@ -232,9 +275,8 @@ void Inkplate10::eink_on_() {
     return;
   Profile p("Inkplate10::eink_on_");
 
-  this->wakeup_pin_->digital_write(true);
-  this->powerup_pin_->digital_write(true);
-  this->vcom_pin_->digital_write(true);
+  WAKEUP_SET;
+  VCOM_SET;
   delay(2);
 
   // Enable all rails
@@ -245,14 +287,15 @@ void Inkplate10::eink_on_() {
   this->write_byte(0x01, 0b10101111);
 
   pins_as_outputs_();
-  this->le_pin_->digital_write(false);
-  this->oe_pin_->digital_write(false);
-  this->cl_pin_->digital_write(false);
-  this->sph_pin_->digital_write(true);
-  this->gmod_pin_->digital_write(true);
-  this->spv_pin_->digital_write(true);
-  this->ckv_pin_->digital_write(false);
-  this->oe_pin_->digital_write(false);
+
+  LE_CLEAR;
+  OE_CLEAR;
+  CL_CLEAR;
+  SPH_SET;
+  GMOD_SET;
+  SPV_SET;
+  CKV_CLEAR;
+  OE_CLEAR;
 
   unsigned long timer = millis();
   // waits for ok status for each rail
@@ -261,14 +304,14 @@ void Inkplate10::eink_on_() {
   } while ((this->read_byte(0x0F) != 0b11111010) && (millis() - timer) < 250);
   if ((millis() - timer) >= 250) {
     ESP_LOGE(TAG, "Eink not ready");
-    this->wakeup_pin_->digital_write(false);
-    this->powerup_pin_->digital_write(false);
-    this->vcom_pin_->digital_write(false);
+    WAKEUP_CLEAR;
+    VCOM_CLEAR;
+    PWRUP_CLEAR;
     this->mark_failed();
     return;
   }
 
-  this->oe_pin_->digital_write(true);
+  OE_SET;
   panel_on_ = 1;
 }
 
@@ -450,42 +493,44 @@ bool Inkplate10::partial_update_() {
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
   return true;
 }
+
 void Inkplate10::vscan_start_() {
-  this->ckv_pin_->digital_write(true);
+  uint32_t clock = (1 << this->cl_pin_->get_pin());
+  CKV_SET;
   delayMicroseconds(7);
-  this->spv_pin_->digital_write(false);
+  SPV_CLEAR;
   delayMicroseconds(10);
-  this->ckv_pin_->digital_write(false);
+  CKV_CLEAR;
   delayMicroseconds(0);
-  this->ckv_pin_->digital_write(true);
+  CKV_SET;
   delayMicroseconds(8);
-  this->spv_pin_->digital_write(true);
+  SPV_SET;
   delayMicroseconds(10);
-  this->ckv_pin_->digital_write(false);
+  CKV_CLEAR;
   delayMicroseconds(0);
-  this->ckv_pin_->digital_write(true);
+  CKV_SET;
   delayMicroseconds(18);
-  this->ckv_pin_->digital_write(false);
+  CKV_CLEAR;
   delayMicroseconds(0);
-  this->ckv_pin_->digital_write(true);
+  CKV_SET;
   delayMicroseconds(18);
-  this->ckv_pin_->digital_write(false);
+  CKV_CLEAR;
   delayMicroseconds(0);
-  this->ckv_pin_->digital_write(true);
+  CKV_SET;
 }
 
 void Inkplate10::hscan_start_(uint32_t d) {
-  this->sph_pin_->digital_write(false);
+  SPH_CLEAR;
   GPIO.out_w1ts = (d) | (1 << this->cl_pin_->get_pin());
   GPIO.out_w1tc = DATA | (1 << this->cl_pin_->get_pin());
-  this->sph_pin_->digital_write(true);
-  this->ckv_pin_->digital_write(true);
+  SPH_SET;
+  CKV_SET;
 }
 void Inkplate10::vscan_end_() {
-  this->ckv_pin_->digital_write(false);
-  this->le_pin_->digital_write(true);
-  this->le_pin_->digital_write(false);
-  delayMicroseconds(1);
+  CKV_CLEAR;
+  LE_SET;
+  LE_CLEAR;
+  delayMicroseconds(0);
 }
 
 void Inkplate10::clean() {
