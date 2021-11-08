@@ -35,6 +35,7 @@ void Profile::status(const std::string &message) {
 }
 
 void Inkplate10::setup() {
+  Profile p("Inkplate10::setup");
   this->vcom_pin_->setup();
   this->powerup_pin_->setup();
   this->wakeup_pin_->setup();
@@ -74,6 +75,7 @@ void Inkplate10::setup() {
 }
 
 void Inkplate10::initialize_() {
+  Profile p("Inkplate10::initialize");
   uint32_t buffer_size = this->get_buffer_length_();
 
   if (this->partial_buffer_ != nullptr) {
