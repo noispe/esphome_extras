@@ -302,7 +302,7 @@ void Inkplate10::display1b_() {
 
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
-  eink_on_();
+  this->eink_on_();
 
   clean_fast_(0, 10);
   clean_fast_(1, 10);
@@ -311,12 +311,12 @@ void Inkplate10::display1b_() {
   for (int k = 0; k < 5; k++) {
     p.status("loop k");
     uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
-    vscan_start_();
+    this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
       p.status("loop i");
       uint8_t dram = ~(*(this->buffer_ + _pos));
       uint8_t data = LUTW[(dram >> 4) & 0x0F];
-      hscan_start_(pinLUT_[data]);
+      this->hscan_start_(pinLUT_[data]);
       data = LUTW[dram & 0x0F];
       GPIO.out_w1ts = pinLUT_[data] | CL;
       GPIO.out_w1tc = DATA | CL;
@@ -333,21 +333,21 @@ void Inkplate10::display1b_() {
       }
       GPIO.out_w1ts = CL;
       GPIO.out_w1tc = DATA | CL;
-      vscan_end_();
+      this->vscan_end_();
     }
     delayMicroseconds(230);
   }
 
-  clean_fast_(2, 2);
-  clean_fast_(3, 1);
+  this->clean_fast_(2, 2);
+  this->clean_fast_(3, 1);
 
-  vscan_start_();
-  eink_off_();
+  this->vscan_start_();
+  this->eink_off_();
   this->block_partial_ = false;
   this->partial_updates_ = 0;
 }
 
-void IRAM_ATTR Inkplate10::display3b_() {
+void Inkplate10::display3b_() {
   Profile p("Inkplate10::display3b_");
 
   uint32_t CL = (1 << this->cl_pin_->get_pin());
