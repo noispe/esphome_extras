@@ -5,19 +5,22 @@
 namespace esphome {
 namespace mq9_circut {
 namespace calibration {
-	struct precalculated { float m; float b;};
-	static constexpr std::array<precalculated,4> setpoints{
-		precalculated{-0.000637f,0.995678f},
-		precalculated{-0.446583f,1.235146f},
-		precalculated{-0.380954f,1.381016f},
-		precalculated{-0.472474f,1.413409f},
-	};
-	enum gas_type {
-		AIR,
-		CO,
-		CH4,
-		LPG,
-	};
-}
-}
-}
+struct precalculated {
+  float m;
+  float b;
+};
+static constexpr std::array<precalculated, 4> setpoints{
+    precalculated{-0.000637f, 0.995678f},
+    precalculated{-0.446583f, 1.235146f},
+    precalculated{-0.380954f, 1.381016f},
+    precalculated{-0.472474f, 1.413409f},
+};
+enum gas_type {
+  AIR,
+  CO,
+  CH4,
+  LPG,
+};
+}  // namespace calibration
+}  // namespace mq9_circut
+}  // namespace esphome

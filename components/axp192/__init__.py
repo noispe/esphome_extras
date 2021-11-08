@@ -12,7 +12,8 @@ CONF_CAPACITY = 'battery_capacity'
 
 axp192_ns = cg.esphome_ns.namespace('axp192')
 
-axp192_component = axp192_ns.class_('axp192_component', cg.PollingComponent, i2c.I2CDevice)
+axp192_component = axp192_ns.class_(
+    'axp192_component', cg.PollingComponent, i2c.I2CDevice)
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(axp192_component),

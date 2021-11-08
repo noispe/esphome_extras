@@ -6,12 +6,14 @@ from . import axp192_ns, axp192_component, CONF_AXP192_ID
 
 DEPENDENCIES = ['axp192']
 
-axp192_backlight = axp192_ns.class_('axp192_backlight', light.LightOutput, cg.Component)
+axp192_backlight = axp192_ns.class_(
+    'axp192_backlight', light.LightOutput, cg.Component)
 
 CONFIG_SCHEMA = cv.All(light.BRIGHTNESS_ONLY_LIGHT_SCHEMA.extend({
     cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(axp192_backlight),
     cv.Required(CONF_AXP192_ID): cv.use_id(axp192_component)
 }).extend(cv.COMPONENT_SCHEMA))
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_OUTPUT_ID])

@@ -32,11 +32,12 @@ CONFIG_SCHEMA = (
     .extend(cv.polling_component_schema("60s"))
 )
 
-def to_code(config):
+
+async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    yield cg.register_component(var, config)
-    yield sensor.register_sensor(var, config)
-    a = yield cg.get_variable(config[CONF_ADC])
+    await cg.register_component(var, config)
+    await sensor.register_sensor(var, config)
+    a = await cg.get_variable(config[CONF_ADC])
     cg.add(var.set_adc(a))
-    iled_pin = yield cg.gpio_pin_expression(config[CONF_ILED_PIN])
+    iled_pin = await cg.gpio_pin_expression(config[CONF_ILED_PIN])
     cg.add(var.set_iled_pin(iled_pin))

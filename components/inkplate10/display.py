@@ -10,7 +10,7 @@ from esphome.const import (
     CONF_WAKEUP_PIN,
 )
 
-DEPENDENCIES = ["i2c","esp32"]
+DEPENDENCIES = ["i2c", "esp32"]
 
 CONF_DISPLAY_DATA_0_PIN = "display_data_0_pin"
 CONF_DISPLAY_DATA_1_PIN = "display_data_1_pin"

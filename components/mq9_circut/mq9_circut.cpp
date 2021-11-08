@@ -14,10 +14,8 @@ void Mq9Circut::update_co() {
     return;
   }
   float volts = this->adc_->sample();
-  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(),
-           volts);
-  this->co_sensor_->publish_state(
-      this->calculate_ppm(calibration::gas_type::CO, volts));
+  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->co_sensor_->get_name().c_str(), volts);
+  this->co_sensor_->publish_state(this->calculate_ppm(calibration::gas_type::CO, volts));
 }
 
 void Mq9Circut::update_tvoc() {
@@ -25,20 +23,16 @@ void Mq9Circut::update_tvoc() {
     return;
   }
   float volts = this->adc_->sample();
-  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV",
-           this->tvoc_sensor_->get_name().c_str(), volts);
-  this->tvoc_sensor_->publish_state(
-      this->calculate_ppm(calibration::gas_type::LPG, volts) * 1000);
+  ESP_LOGD(TAG, "'%s': Got voltage=%.2fV", this->tvoc_sensor_->get_name().c_str(), volts);
+  this->tvoc_sensor_->publish_state(this->calculate_ppm(calibration::gas_type::LPG, volts) * 1000);
 }
 
 float Mq9Circut::calculate_ppm(calibration::gas_type type, float VRl) {
-  float rs_gas = ((Vc - VRl) / VRl) * Rl; // Get value of RS in a gas
-  float ratio = rs_gas / this->r0_;       // Get ratio rs_gas/rs_air
-  float ppm = powf(10, (log10f(ratio) - calibration::setpoints[type].b) /
-                           calibration::setpoints[type].m);
+  float rs_gas = ((Vc - VRl) / VRl) * Rl;  // Get value of RS in a gas
+  float ratio = rs_gas / this->r0_;        // Get ratio rs_gas/rs_air
+  float ppm = powf(10, (log10f(ratio) - calibration::setpoints[type].b) / calibration::setpoints[type].m);
 
-  ESP_LOGCONFIG(TAG, "calculate_ppm %d '%.2fV' scale: '%.2f'.", (int)type, VRl,
-                ppm);
+  ESP_LOGCONFIG(TAG, "calculate_ppm %d '%.2fV' scale: '%.2f'.", (int) type, VRl, ppm);
   return ppm;
 }
 
@@ -51,9 +45,7 @@ void Mq9Circut::setup() {
   this->control_pin_->digital_write(false);
   if (this->calibration_sensor_ != nullptr) {
     this->start_calibration();
-    set_interval(30000, [this]() {
-      this->calibration_sensor_->publish_state(this->sample_calibration());
-    });
+    set_interval(30000, [this]() { this->calibration_sensor_->publish_state(this->sample_calibration()); });
   } else {
     set_interval(30000, [this]() {
       this->count_++;
@@ -102,13 +94,13 @@ float Mq9Circut::sample_calibration() {
   float r0 = 0.0f;
   float sensor_volt = this->calibration_accumulator_.current();
   if (sensor_volt != 0.0f) {
-    float rs_air = ((Vc * Rl) / sensor_volt) - Rl; // Calculate RS in fresh air
-    r0 = rs_air / 10.0f;                           // Calculate R0 for air
+    float rs_air = ((Vc * Rl) / sensor_volt) - Rl;  // Calculate RS in fresh air
+    r0 = rs_air / 10.0f;                            // Calculate R0 for air
     ESP_LOGD(TAG, "Calibrated R0=%.2f voltage=%.2f", r0, sensor_volt);
   }
   return r0;
 }
 
-} // namespace mq9_circut
+}  // namespace mq9_circut
 
-} // namespace esphome
+}  // namespace esphome

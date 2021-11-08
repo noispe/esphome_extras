@@ -40,9 +40,8 @@ template<typename T, typename Tl, size_t N> class MovingAvg {
 };
 
 }  // namespace detail
-class Mq9Circut : public sensor::Sensor,
-                  public Component {
-public:
+class Mq9Circut : public sensor::Sensor, public Component {
+ public:
   static constexpr float Vc = 5.0f;
   static constexpr float Rl = 10000.0f;
   void update_co();
@@ -57,7 +56,7 @@ public:
   void set_calibration_sensor(sensor::Sensor *sensor) { calibration_sensor_ = sensor; }
   void set_r0(float r0) { r0_ = r0; }
 
-protected:
+ protected:
   void start_calibration();
   float sample_calibration();
   float calculate_ppm(calibration::gas_type type, float VRl);
@@ -73,5 +72,5 @@ protected:
   sensor::Sensor *calibration_sensor_{nullptr};
 };
 
-} // namespace mq9_circut
-} // namespace esphome
+}  // namespace mq9_circut
+}  // namespace esphome

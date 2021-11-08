@@ -5,7 +5,6 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 
-
 namespace esphome {
 namespace waveshare_dust_sensor {
 namespace detail {
