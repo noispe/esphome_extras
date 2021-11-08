@@ -34,7 +34,6 @@ CONF_SPH_PIN = "sph_pin"
 CONF_SPV_PIN = "spv_pin"
 CONF_VCOM_PIN = "vcom_pin"
 
-
 inkplate10_ns = cg.esphome_ns.namespace("inkplate10")
 Inkplate10 = inkplate10_ns.class_(
     "Inkplate10", cg.PollingComponent, i2c.I2CDevice, display.DisplayBuffer

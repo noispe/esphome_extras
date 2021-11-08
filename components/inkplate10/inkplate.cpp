@@ -10,10 +10,31 @@
 
 namespace esphome {
 namespace inkplate10 {
-
 static const char *const TAG = "inkplate";
-void Inkplate10::setup() {
 
+class Profile {
+ public:
+  Profile(const std::string &name);
+  ~Profile();
+  void status(const std::string &message);
+
+ private:
+  uint32_t start_time_ = 0;
+  std::string name_{};
+};
+
+Profile::Profile(const std::string &name) : name_(name) {
+  start_time_ = millis();
+  ESP_LOGV(TAG, "%s started", name_.c_str());
+}
+
+Profile::~Profile() { ESP_LOGV(TAG, "%s finished (%ums)", name_.c_str(), millis() - start_time_); }
+
+void Profile::status(const std::string &message) {
+  ESP_LOGV(TAG, "%s at %s (%ums)", name_.c_str(), message.c_str(), millis() - start_time_);
+}
+
+void Inkplate10::setup() {
   this->vcom_pin_->setup();
   this->powerup_pin_->setup();
   this->wakeup_pin_->setup();
@@ -22,10 +43,10 @@ void Inkplate10::setup() {
 
   this->wakeup_pin_->digital_write(true);
   this->write_bytes(0x09, std::array<uint8_t, 4>{
-                              0b00011011, // Power up seq.
-                              0b00000000, // Power up delay (3mS per rail)
-                              0b00011011, // Power down seq.
-                              0b00000000  // Power down delay (6mS per rail)
+                              0b00011011,  // Power up seq.
+                              0b00000000,  // Power up delay (3mS per rail)
+                              0b00011011,  // Power down seq.
+                              0b00000000   // Power down delay (6mS per rail)
                           });
   this->wakeup_pin_->digital_write(false);
 
@@ -58,29 +79,29 @@ void Inkplate10::initialize_() {
   uint32_t buffer_size = this->get_buffer_length_();
 
   if (this->partial_buffer_ != nullptr) {
-    free(this->partial_buffer_); // NOLINT
+    free(this->partial_buffer_);  // NOLINT
   }
   if (this->partial_buffer_2_ != nullptr) {
-    free(this->partial_buffer_2_); // NOLINT
+    free(this->partial_buffer_2_);  // NOLINT
   }
   if (this->buffer_ != nullptr) {
-    free(this->buffer_); // NOLINT
+    free(this->buffer_);  // NOLINT
   }
 
-  this->buffer_ = (uint8_t *)ps_malloc(buffer_size);
+  this->buffer_ = (uint8_t *) ps_malloc(buffer_size);
   if (this->buffer_ == nullptr) {
     ESP_LOGE(TAG, "Could not allocate buffer for display!");
     this->mark_failed();
     return;
   }
   if (!this->greyscale_) {
-    this->partial_buffer_ = (uint8_t *)ps_malloc(buffer_size);
+    this->partial_buffer_ = (uint8_t *) ps_malloc(buffer_size);
     if (this->partial_buffer_ == nullptr) {
       ESP_LOGE(TAG, "Could not allocate partial buffer for display!");
       this->mark_failed();
       return;
     }
-    this->partial_buffer_2_ = (uint8_t *)ps_malloc(buffer_size * 2);
+    this->partial_buffer_2_ = (uint8_t *) ps_malloc(buffer_size * 2);
     if (this->partial_buffer_2_ == nullptr) {
       ESP_LOGE(TAG, "Could not allocate partial buffer 2 for display!");
       this->mark_failed();
@@ -94,65 +115,49 @@ void Inkplate10::initialize_() {
 
   for (int j = 0; j < 8; ++j) {
     for (uint32_t i = 0; i < 256; ++i) {
-      uint8_t z =
-          (waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j]);
-      glut_[j * 256 + i] =
-          ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
-          (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
-      z = ((waveform3Bit[i & 0x07][j] << 2) |
-           (waveform3Bit[(i >> 4) & 0x07][j]))
-          << 4;
-      glut2_[j * 256 + i] =
-          ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
-          (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
+      uint8_t z = (waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j]);
+      glut_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) | (((z & 0b00010000) >> 4) << 23) |
+                           (((z & 0b11100000) >> 5) << 25);
+      z = ((waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j])) << 4;
+      glut2_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
+                            (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
     }
   }
 
   for (uint32_t i = 0; i < 256; ++i) {
-    pinLUT_[i] = ((i & 0b00000011) << 4) | (((i & 0b00001100) >> 2) << 18) |
-                 (((i & 0b00010000) >> 4) << 23) |
+    pinLUT_[i] = ((i & 0b00000011) << 4) | (((i & 0b00001100) >> 2) << 18) | (((i & 0b00010000) >> 4) << 23) |
                  (((i & 0b11100000) >> 5) << 25);
   }
 }
 
-float Inkplate10::get_setup_priority() const {
-  return setup_priority::PROCESSOR;
-}
-size_t Inkplate10::get_buffer_length_()  {
+float Inkplate10::get_setup_priority() const { return setup_priority::PROCESSOR; }
+size_t Inkplate10::get_buffer_length_() {
   if (this->greyscale_) {
-    return size_t(this->get_width_internal()) *
-           size_t(this->get_height_internal()) / 2u;
+    return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 2u;
   } else {
-    return size_t(this->get_width_internal()) *
-           size_t(this->get_height_internal()) / 8u;
+    return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8u;
   }
 }
 void Inkplate10::update() {
   this->do_update_();
 
-  if (this->full_update_every_ > 0 &&
-      this->partial_updates_ >= this->full_update_every_) {
+  if (this->full_update_every_ > 0 && this->partial_updates_ >= this->full_update_every_) {
     this->block_partial_ = true;
   }
 
   this->display();
 }
 void HOT Inkplate10::draw_absolute_pixel_internal(int x0, int y0, Color color) {
-  if (x0 >= this->get_width_internal() || y0 >= this->get_height_internal() ||
-      x0 < 0 || y0 < 0)
+  if (x0 >= this->get_width_internal() || y0 >= this->get_height_internal() || x0 < 0 || y0 < 0)
     return;
 
-  uint8_t gs = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) +
-                (color.blue * 722 / 10000)) >>
-               5;
+  uint8_t gs = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) + (color.blue * 722 / 10000)) >> 5;
   if (this->greyscale_ == false) {
     int x = x0 >> 3;
     int x_sub = x0 & 7;
-    uint8_t temp =
-        *(this->partial_buffer_ + ((this->get_width_internal() >> 3) * y0) + x);
+    uint8_t temp = *(this->partial_buffer_ + ((this->get_width_internal() >> 3) * y0) + x);
     *(this->partial_buffer_ + (this->get_width_internal() / 8 * y0) + x) =
-        (~pixelMaskLUT[x_sub] & temp) |
-        (color.is_on() ? pixelMaskLUT[x_sub] : 0);
+        (~pixelMaskLUT[x_sub] & temp) | (color.is_on() ? pixelMaskLUT[x_sub] : 0);
   } else {
     gs &= 7;
     int x = x0 >> 1;
@@ -195,15 +200,14 @@ void Inkplate10::dump_config() {
 }
 
 void Inkplate10::eink_off_() {
-  ESP_LOGV(TAG, "Eink off called");
   if (panel_on_ == 0)
     return;
-  panel_on_ = 0;
+  Profile p("Inkplate10::eink_off_");
+
   this->gmod_pin_->digital_write(false);
   this->oe_pin_->digital_write(false);
 
-  GPIO.out &= ~(DATA | (1 << this->cl_pin_->get_pin()) |
-                (1 << this->le_pin_->get_pin()));
+  GPIO.out &= ~(DATA | (1 << this->cl_pin_->get_pin()) | (1 << this->le_pin_->get_pin()));
   this->ckv_pin_->digital_write(false);
   this->sph_pin_->digital_write(false);
   this->spv_pin_->digital_write(false);
@@ -223,9 +227,9 @@ void Inkplate10::eink_off_() {
 }
 
 void Inkplate10::eink_on_() {
-  ESP_LOGV(TAG, "Eink on called");
   if (panel_on_ == 1)
     return;
+  Profile p("Inkplate10::eink_on_");
 
   this->wakeup_pin_->digital_write(true);
   this->powerup_pin_->digital_write(true);
@@ -255,6 +259,7 @@ void Inkplate10::eink_on_() {
     delay(1);
   } while ((this->read_byte(0x0F) != 0b11111010) && (millis() - timer) < 250);
   if ((millis() - timer) >= 250) {
+    ESP_LOGV(TAG, "Eink not ready");
     this->wakeup_pin_->digital_write(false);
     this->powerup_pin_->digital_write(false);
     this->vcom_pin_->digital_write(false);
@@ -268,39 +273,32 @@ void Inkplate10::eink_on_() {
 
 void Inkplate10::fill(Color color) {
   ESP_LOGV(TAG, "Fill called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::fill");
 
   if (this->greyscale_) {
-    uint8_t fill = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) +
-                    (color.blue * 722 / 10000)) >>
-                   5;
+    uint8_t fill = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) + (color.blue * 722 / 10000)) >> 5;
     memset(this->buffer_, (fill << 4) | fill, this->get_buffer_length_());
   } else {
     uint8_t fill = color.is_on() ? 0x00 : 0xFF;
     memset(this->partial_buffer_, fill, this->get_buffer_length_());
   }
-
-  ESP_LOGV(TAG, "Fill finished (%ums)", millis() - start_time);
 }
 void Inkplate10::display() {
-  ESP_LOGV(TAG, "Display called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::display");
 
   if (this->greyscale_) {
     this->display3b_();
   } else {
     if (this->partial_updating_ && this->partial_update_()) {
-      ESP_LOGV(TAG, "Display finished (partial) (%ums)", millis() - start_time);
+      p.status("partial update");
       return;
     }
     this->display1b_();
   }
-  ESP_LOGV(TAG, "Display finished (full) (%ums)", millis() - start_time);
 }
 
 void Inkplate10::display1b_() {
-  ESP_LOGV(TAG, "Display1b called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::display1b_");
 
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
 
@@ -350,12 +348,11 @@ void Inkplate10::display1b_() {
   eink_off_();
   this->block_partial_ = false;
   this->partial_updates_ = 0;
-  ESP_LOGV(TAG, "Display1b finished (%ums)", millis() - start_time);
 }
 
 void IRAM_ATTR Inkplate10::display3b_() {
-  ESP_LOGV(TAG, "Display3b called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::display3b_");
+
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
   eink_on_();
@@ -366,8 +363,7 @@ void IRAM_ATTR Inkplate10::display3b_() {
   clean_fast_(1, 10);
 
   for (int k = 0; k < 8; k++) {
-    uint8_t *dp = this->buffer_ + (this->get_height_internal() *
-                                   this->get_width_internal() / 2);
+    uint8_t *dp = this->buffer_ + (this->get_height_internal() * this->get_width_internal() / 2);
 
     vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
@@ -399,11 +395,10 @@ void IRAM_ATTR Inkplate10::display3b_() {
   clean_fast_(3, 1);
   vscan_start_();
   eink_off_();
-  ESP_LOGV(TAG, "Display3b finished (%ums)", millis() - start_time);
 }
+
 bool Inkplate10::partial_update_() {
-  ESP_LOGV(TAG, "Partial update called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::partial_update_");
   if (this->greyscale_)
     return false;
   if (this->block_partial_)
@@ -419,24 +414,20 @@ bool Inkplate10::partial_update_() {
 
   for (int i = 0, im = this->get_height_internal(); i < im; i++) {
     for (int j = 0, jm = (this->get_width_internal() / 8); j < jm; j++) {
-      diffw = (this->buffer_[pos] ^ this->partial_buffer_[pos]) &
-              ~(this->partial_buffer_[pos]);
-      diffb = (this->buffer_[pos] ^ this->partial_buffer_[pos]) &
-              this->partial_buffer_[pos];
+      diffw = (this->buffer_[pos] ^ this->partial_buffer_[pos]) & ~(this->partial_buffer_[pos]);
+      diffb = (this->buffer_[pos] ^ this->partial_buffer_[pos]) & this->partial_buffer_[pos];
       pos--;
       this->partial_buffer_2_[n--] = LUTW[diffw >> 4] & LUTB[diffb >> 4];
       this->partial_buffer_2_[n--] = LUTW[diffw & 0x0F] & LUTB[diffb & 0x0F];
     }
   }
-  ESP_LOGV(TAG, "Partial update buffer built after (%ums)",
-           millis() - start_time);
+  p.status("update buffer built");
 
   eink_on_();
   uint32_t clock = (1 << this->cl_pin_->get_pin());
   for (int k = 0; k < 5; k++) {
     vscan_start_();
-    const uint8_t *data_ptr =
-        &this->partial_buffer_2_[(this->get_buffer_length_() * 2) - 1];
+    const uint8_t *data_ptr = &this->partial_buffer_2_[(this->get_buffer_length_() * 2) - 1];
     for (int i = 0; i < this->get_height_internal(); i++) {
       data = *(data_ptr--);
       send = this->get_pin_address_(data);
@@ -452,7 +443,7 @@ bool Inkplate10::partial_update_() {
       vscan_end_();
     }
     delayMicroseconds(230);
-    ESP_LOGV(TAG, "Partial update loop k=%d (%ums)", k, millis() - start_time);
+    p.status("Partial update loop");
   }
   clean_fast_(2, 2);
   clean_fast_(3, 1);
@@ -460,7 +451,6 @@ bool Inkplate10::partial_update_() {
   eink_off_();
 
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
-  ESP_LOGV(TAG, "Partial update finished (%ums)", millis() - start_time);
   return true;
 }
 void Inkplate10::vscan_start_() {
@@ -487,7 +477,6 @@ void Inkplate10::vscan_start_() {
   this->ckv_pin_->digital_write(true);
 }
 
-
 void Inkplate10::hscan_start_(uint32_t d) {
   this->sph_pin_->digital_write(false);
   GPIO.out_w1ts = (d) | (1 << this->cl_pin_->get_pin());
@@ -503,21 +492,20 @@ void Inkplate10::vscan_end_() {
 }
 
 void Inkplate10::clean() {
-  ESP_LOGV(TAG, "Clean called");
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::clean");
 
   eink_on_();
-  clean_fast_(0, 1);  // White
-  clean_fast_(0, 8);  // White to White
-  clean_fast_(0, 1);  // White to Black
-  clean_fast_(0, 8);  // Black to Black
-  clean_fast_(2, 1);  // Black to White
-  clean_fast_(1, 10); // White to White
-  ESP_LOGV(TAG, "Clean finished (%ums)", millis() - start_time);
+  clean_fast_(0, 1);   // White
+  clean_fast_(0, 8);   // White to White
+  clean_fast_(0, 1);   // White to Black
+  clean_fast_(0, 8);   // Black to Black
+  clean_fast_(2, 1);   // Black to White
+  clean_fast_(1, 10);  // White to White
 }
+
 void Inkplate10::clean_fast_(uint8_t c, uint8_t rep) {
   ESP_LOGV(TAG, "Clean fast called with: (%d, %d)", c, rep);
-  uint32_t start_time = millis();
+  Profile p("Inkplate10::clean_fast_");
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
   eink_on_();
@@ -550,7 +538,6 @@ void Inkplate10::clean_fast_(uint8_t c, uint8_t rep) {
     }
     delayMicroseconds(230);
   }
-  ESP_LOGV(TAG, "Clean fast finished (%ums)", millis() - start_time);
 }
 
 void Inkplate10::pins_z_state_() {
@@ -589,7 +576,7 @@ void Inkplate10::pins_as_outputs_() {
   this->display_data_7_pin_->pin_mode(gpio::FLAG_OUTPUT);
 }
 
-} // namespace inkplate10
-} // namespace esphome
+}  // namespace inkplate10
+}  // namespace esphome
 
 #endif
