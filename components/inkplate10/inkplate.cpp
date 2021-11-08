@@ -309,11 +309,9 @@ void Inkplate10::display1b_() {
   clean_fast_(0, 10);
   clean_fast_(1, 10);
   for (int k = 0; k < 5; k++) {
-    p.status("loop k");
     uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
     this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
-      p.status("loop i");
       uint8_t dram = ~(*(this->buffer_ + _pos));
       uint8_t data = LUTW[(dram >> 4) & 0x0F];
       this->hscan_start_(pinLUT_[data]);
