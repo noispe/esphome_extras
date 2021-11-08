@@ -47,8 +47,8 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PARTIAL_UPDATING, default=True): cv.boolean,
             cv.Optional(CONF_FULL_UPDATE_EVERY, default=10): cv.uint32_t,
             # Control pins
-            cv.Required(CONF_CKV_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_SPH_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_CKV_PIN): pins.internal_gpio_output_pin_schema,
+            cv.Required(CONF_SPH_PIN): pins.internal_gpio_output_pin_schema,
             cv.Required(CONF_GMOD_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_GPIO0_ENABLE_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_OE_PIN): pins.gpio_output_pin_schema,

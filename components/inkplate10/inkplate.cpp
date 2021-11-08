@@ -38,15 +38,14 @@ void Profile::status(const std::string &message) {
   { GPIO.out_w1ts = (1 << this->cl_pin_->get_pin()); }
 #define CL_CLEAR \
   { GPIO.out_w1tc = (1 << this->cl_pin_->get_pin()); }
-#define CKV 0x01
 #define CKV_SET \
-  { GPIO.out1_w1ts.val = 0x01; }
+  { GPIO.out1_w1ts.val = (1 << this->ckv_pin_->get_pin()); }
 #define CKV_CLEAR \
-  { GPIO.out1_w1tc.val = 0x01; }
+  { GPIO.out1_w1tc.val = (1 << this->ckv_pin_->get_pin()); }
 #define SPH_SET \
-  { GPIO.out1_w1ts.val = 0x02; }
+  { GPIO.out1_w1ts.val = (1 << this->sph_pin_->get_pin()); }
 #define SPH_CLEAR \
-  { GPIO.out1_w1tc.val = 0x02; }
+  { GPIO.out1_w1tc.val = (1 << this->sph_pin_->get_pin()); }
 #define LE_SET \
   { GPIO.out_w1ts = (1 << this->le_pin_->get_pin()); }
 #define LE_CLEAR \
@@ -63,17 +62,14 @@ void Profile::status(const std::string &message) {
   { this->spv_pin_->digital_write(true); }
 #define SPV_CLEAR \
   { this->spv_pin_->digital_write(false); }
-#define WAKEUP 3
 #define WAKEUP_SET \
   { this->wakeup_pin_->digital_write(true); }
 #define WAKEUP_CLEAR \
   { this->wakeup_pin_->digital_write(false); }
-
 #define PWRUP_SET \
   { this->powerup_pin_->digital_write(true); }
 #define PWRUP_CLEAR \
   { this->powerup_pin_->digital_write(false); }
-#define VCOM 5
 #define VCOM_SET \
   { this->vcom_pin_->digital_write(true); }
 #define VCOM_CLEAR \
