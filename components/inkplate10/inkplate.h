@@ -10,91 +10,49 @@
 namespace esphome {
 namespace inkplate10 {
 
-class Inkplate10 : public PollingComponent,
-                   public display::DisplayBuffer,
-                   public i2c::I2CDevice {
-public:
+class Inkplate10 : public PollingComponent, public display::DisplayBuffer, public i2c::I2CDevice {
+ public:
   const uint32_t DATA = 0x0E8C0030;
 
-  const uint8_t LUT2[16] = {0b10101010, 0b10101001, 0b10100110, 0b10100101,
-                            0b10011010, 0b10011001, 0b10010110, 0b10010101,
-                            0b01101010, 0b01101001, 0b01100110, 0b01100101,
-                            0b01011010, 0b01011001, 0b01010110, 0b01010101};
-  const uint8_t LUTW[16] = {0b11111111, 0b11111110, 0b11111011, 0b11111010,
-                            0b11101111, 0b11101110, 0b11101011, 0b11101010,
-                            0b10111111, 0b10111110, 0b10111011, 0b10111010,
-                            0b10101111, 0b10101110, 0b10101011, 0b10101010};
-  const uint8_t LUTB[16] = {0b11111111, 0b11111101, 0b11110111, 0b11110101,
-                            0b11011111, 0b11011101, 0b11010111, 0b11010101,
-                            0b01111111, 0b01111101, 0b01110111, 0b01110101,
-                            0b01011111, 0b01011101, 0b01010111, 0b01010101};
-  const uint8_t pixelMaskLUT[8] = {0b00000001, 0b00000010, 0b00000100,
-                                   0b00001000, 0b00010000, 0b00100000,
-                                   0b01000000, 0b10000000};
-  const uint8_t pixelMaskGLUT[2] = {0b00001111, 0b11110000};
-  const uint8_t waveform3Bit[8][8] = {
-      {0, 0, 0, 0, 0, 0, 1, 0}, {0, 0, 2, 2, 2, 1, 1, 0},
-      {0, 2, 1, 1, 2, 2, 1, 0}, {1, 2, 2, 1, 2, 2, 1, 0},
-      {0, 2, 1, 2, 2, 2, 1, 0}, {2, 2, 2, 2, 2, 2, 1, 0},
-      {0, 0, 0, 0, 2, 1, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
-  const uint8_t waveform3BitLight[8][8] = {
-      {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 2, 2, 1, 2, 1, 0},
-      {0, 2, 2, 1, 2, 2, 1, 0}, {0, 0, 2, 2, 2, 2, 1, 0},
-      {0, 0, 2, 1, 1, 1, 2, 0}, {0, 2, 2, 2, 1, 1, 2, 0},
-      {0, 0, 0, 2, 1, 2, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
-  const uint32_t waveform[50] = {
-      0x00000008, 0x00000008, 0x00200408, 0x80281888, 0x60a81898, 0x60a8a8a8,
-      0x60a8a8a8, 0x6068a868, 0x6868a868, 0x6868a868, 0x68686868, 0x6a686868,
-      0x5a686868, 0x5a686868, 0x5a586a68, 0x5a5a6a68, 0x5a5a6a68, 0x55566a68,
-      0x55565a64, 0x55555654, 0x55555556, 0x55555556, 0x55555556, 0x55555516,
-      0x55555596, 0x15555595, 0x95955595, 0x95959595, 0x95949495, 0x94949495,
-      0x94949495, 0xa4949494, 0x9494a4a4, 0x84a49494, 0x84948484, 0x84848484,
-      0x84848484, 0x84848484, 0xa5a48484, 0xa9a4a4a8, 0xa9a8a8a8, 0xa5a9a9a4,
-      0xa5a5a5a4, 0xa1a5a5a1, 0xa9a9a9a9, 0xa9a9a9a9, 0xa9a9a9a9, 0xa9a9a9a9,
-      0x15151515, 0x11111111};
+  const uint8_t LUT2[16] = {0xAA, 0xA9, 0xA6, 0xA5, 0x9A, 0x99, 0x96, 0x95,
+                            0x6A, 0x69, 0x66, 0x65, 0x5A, 0x59, 0x56, 0x55};
+  const uint8_t LUTW[16] = {0xFF, 0xFE, 0xFB, 0xFA, 0xEF, 0xEE, 0xEB, 0xEA,
+                            0xBF, 0xBE, 0xBB, 0xBA, 0xAF, 0xAE, 0xAB, 0xAA};
+  const uint8_t LUTB[16] = {0xFF, 0xFD, 0xF7, 0xF5, 0xDF, 0xDD, 0xD7, 0xD5,
+                            0x7F, 0x7D, 0x77, 0x75, 0x5F, 0x5D, 0x57, 0x55};
+
+  const uint8_t pixelMaskLUT[8] = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80};
+  const uint8_t pixelMaskGLUT[2] = {0xF, 0xF0};
+
+  const uint8_t discharge[16] = {0xFF, 0xFC, 0xF3, 0xF0, 0xCF, 0xCC, 0xC3, 0xC0,
+                                 0x3F, 0x3C, 0x33, 0x30, 0xF,  0xC,  0x3,  0x0};
+  const uint8_t waveform3Bit[8][8] = {{0, 0, 0, 0, 0, 0, 1, 0}, {0, 0, 2, 2, 2, 1, 1, 0}, {0, 2, 1, 1, 2, 2, 1, 0},
+                                      {1, 2, 2, 1, 2, 2, 1, 0}, {0, 2, 1, 2, 2, 2, 1, 0}, {2, 2, 2, 2, 2, 2, 1, 0},
+                                      {0, 0, 0, 0, 2, 1, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
+  const uint8_t waveform3BitLight[8][8] = {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 2, 2, 1, 2, 1, 0}, {0, 2, 2, 1, 2, 2, 1, 0},
+                                           {0, 0, 2, 2, 2, 2, 1, 0}, {0, 0, 2, 1, 1, 1, 2, 0}, {0, 2, 2, 2, 1, 1, 2, 0},
+                                           {0, 0, 0, 2, 1, 2, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
 
   void set_greyscale(bool greyscale) {
     this->greyscale_ = greyscale;
     this->initialize_();
     this->block_partial_ = true;
   }
-  void set_partial_updating(bool partial_updating) {
-    this->partial_updating_ = partial_updating;
-  }
-  void set_full_update_every(uint32_t full_update_every) {
-    this->full_update_every_ = full_update_every;
-  }
+  void set_partial_updating(bool partial_updating) { this->partial_updating_ = partial_updating; }
+  void set_full_update_every(uint32_t full_update_every) { this->full_update_every_ = full_update_every; }
 
-  void set_display_data_0_pin(InternalGPIOPin *data) {
-    this->display_data_0_pin_ = data;
-  }
-  void set_display_data_1_pin(InternalGPIOPin *data) {
-    this->display_data_1_pin_ = data;
-  }
-  void set_display_data_2_pin(InternalGPIOPin *data) {
-    this->display_data_2_pin_ = data;
-  }
-  void set_display_data_3_pin(InternalGPIOPin *data) {
-    this->display_data_3_pin_ = data;
-  }
-  void set_display_data_4_pin(InternalGPIOPin *data) {
-    this->display_data_4_pin_ = data;
-  }
-  void set_display_data_5_pin(InternalGPIOPin *data) {
-    this->display_data_5_pin_ = data;
-  }
-  void set_display_data_6_pin(InternalGPIOPin *data) {
-    this->display_data_6_pin_ = data;
-  }
-  void set_display_data_7_pin(InternalGPIOPin *data) {
-    this->display_data_7_pin_ = data;
-  }
+  void set_display_data_0_pin(InternalGPIOPin *data) { this->display_data_0_pin_ = data; }
+  void set_display_data_1_pin(InternalGPIOPin *data) { this->display_data_1_pin_ = data; }
+  void set_display_data_2_pin(InternalGPIOPin *data) { this->display_data_2_pin_ = data; }
+  void set_display_data_3_pin(InternalGPIOPin *data) { this->display_data_3_pin_ = data; }
+  void set_display_data_4_pin(InternalGPIOPin *data) { this->display_data_4_pin_ = data; }
+  void set_display_data_5_pin(InternalGPIOPin *data) { this->display_data_5_pin_ = data; }
+  void set_display_data_6_pin(InternalGPIOPin *data) { this->display_data_6_pin_ = data; }
+  void set_display_data_7_pin(InternalGPIOPin *data) { this->display_data_7_pin_ = data; }
 
   void set_ckv_pin(GPIOPin *ckv) { this->ckv_pin_ = ckv; }
   void set_cl_pin(InternalGPIOPin *cl) { this->cl_pin_ = cl; }
-  void set_gpio0_enable_pin(GPIOPin *gpio0_enable) {
-    this->gpio0_enable_pin_ = gpio0_enable;
-  }
+  void set_gpio0_enable_pin(GPIOPin *gpio0_enable) { this->gpio0_enable_pin_ = gpio0_enable; }
   void set_gmod_pin(GPIOPin *gmod) { this->gmod_pin_ = gmod; }
   void set_le_pin(InternalGPIOPin *le) { this->le_pin_ = le; }
   void set_oe_pin(GPIOPin *oe) { this->oe_pin_ = oe; }
@@ -121,7 +79,7 @@ public:
   bool get_partial_updating() { return this->partial_updating_; }
   uint8_t get_temperature() { return this->temperature_; }
 
-protected:
+ protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   void display1b_();
   void display3b_();
@@ -161,14 +119,13 @@ protected:
   }
 
   uint32_t get_pin_address_(uint8_t data) const {
-    return ((data & 0b00000011) << 4) | (((data & 0b00001100) >> 2) << 18) |
-           (((data & 0b00010000) >> 4) << 23) |
+    return ((data & 0b00000011) << 4) | (((data & 0b00001100) >> 2) << 18) | (((data & 0b00010000) >> 4) << 23) |
            (((data & 0b11100000) >> 5) << 25);
   }
 
-  std::array<uint32_t,256*8> glut_{};
-  std::array<uint32_t,256*8> glut2_{};
-  std::array<uint32_t,256> pinLUT_{};
+  std::array<uint32_t, 256 * 8> glut_{};
+  std::array<uint32_t, 256 * 8> glut2_{};
+  std::array<uint32_t, 256> pinLUT_{};
 
   uint8_t panel_on_ = 0;
   uint8_t temperature_;
@@ -205,7 +162,7 @@ protected:
   GPIOPin *wakeup_pin_;
 };
 
-} // namespace inkplate10
-} // namespace esphome
+}  // namespace inkplate10
+}  // namespace esphome
 
-#endif // USE_ESP32_FRAMEWORK_ARDUINO
+#endif  // USE_ESP32_FRAMEWORK_ARDUINO
