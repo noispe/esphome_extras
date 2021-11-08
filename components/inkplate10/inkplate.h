@@ -14,6 +14,8 @@ class Inkplate10 : public PollingComponent,
                    public display::DisplayBuffer,
                    public i2c::I2CDevice {
 public:
+  const uint32_t DATA = 0x0E8C0030;
+
   const uint8_t LUT2[16] = {0b10101010, 0b10101001, 0b10100110, 0b10100101,
                             0b10011010, 0b10011001, 0b10010110, 0b10010101,
                             0b01101010, 0b01101001, 0b01100110, 0b01100101,
@@ -35,6 +37,11 @@ public:
       {0, 2, 1, 1, 2, 2, 1, 0}, {1, 2, 2, 1, 2, 2, 1, 0},
       {0, 2, 1, 2, 2, 2, 1, 0}, {2, 2, 2, 2, 2, 2, 1, 0},
       {0, 0, 0, 0, 2, 1, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
+  const uint8_t waveform3BitLight[8][8] = {
+      {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 2, 2, 1, 2, 1, 0},
+      {0, 2, 2, 1, 2, 2, 1, 0}, {0, 0, 2, 2, 2, 2, 1, 0},
+      {0, 0, 2, 1, 1, 1, 2, 0}, {0, 2, 2, 2, 1, 1, 2, 0},
+      {0, 0, 0, 2, 1, 2, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
   const uint32_t waveform[50] = {
       0x00000008, 0x00000008, 0x00200408, 0x80281888, 0x60a81898, 0x60a8a8a8,
       0x60a8a8a8, 0x6068a868, 0x6868a868, 0x6868a868, 0x68686868, 0x6a686868,
@@ -88,7 +95,7 @@ public:
   void set_gpio0_enable_pin(GPIOPin *gpio0_enable) {
     this->gpio0_enable_pin_ = gpio0_enable;
   }
-  void set_gmod_pin(GPIOPin *gmod) { this->gmod_pin_ = gmod; }
+  void set_gmod_pin(InternalGPIOPin *gmod) { this->gmod_pin_ = gmod; }
   void set_le_pin(InternalGPIOPin *le) { this->le_pin_ = le; }
   void set_oe_pin(GPIOPin *oe) { this->oe_pin_ = oe; }
   void set_powerup_pin(GPIOPin *powerup) { this->powerup_pin_ = powerup; }
@@ -159,6 +166,10 @@ protected:
            (((data & 0b11100000) >> 5) << 25);
   }
 
+  std::array<uint32_t,256*8> glut_{};
+  std::array<uint32_t,256*8> glut2_{};
+  std::array<uint32_t,256> pinLUT_{};
+
   uint8_t panel_on_ = 0;
   uint8_t temperature_;
 
@@ -184,7 +195,7 @@ protected:
   GPIOPin *ckv_pin_;
   InternalGPIOPin *cl_pin_;
   GPIOPin *gpio0_enable_pin_;
-  GPIOPin *gmod_pin_;
+  InternalGPIOPin *gmod_pin_;
   InternalGPIOPin *le_pin_;
   GPIOPin *oe_pin_;
   GPIOPin *powerup_pin_;
