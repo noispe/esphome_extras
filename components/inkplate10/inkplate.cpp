@@ -1,4 +1,3 @@
-
 #include "inkplate.h"
 #include "esphome/core/application.h"
 #include "esphome/core/helpers.h"
@@ -77,6 +76,7 @@ void Profile::status(const std::string &message) {
 
 void Inkplate10::setup() {
   Profile p("Inkplate10::setup");
+  this->initialize_();
   this->vcom_pin_->setup();
   this->powerup_pin_->setup();
   this->wakeup_pin_->setup();
@@ -111,7 +111,6 @@ void Inkplate10::setup() {
   this->display_data_6_pin_->setup();
   this->display_data_7_pin_->setup();
 
-  this->initialize_();
 }
 
 void Inkplate10::initialize_() {
@@ -198,7 +197,7 @@ void HOT Inkplate10::draw_absolute_pixel_internal(int x0, int y0, Color color) {
     int x_sub = x0 & 7;
     uint8_t temp = *(this->partial_buffer_ + ((this->get_width_internal() >> 3) * y0) + x);
     *(this->partial_buffer_ + (this->get_width_internal() / 8 * y0) + x) =
-        (~pixelMaskLUT[x_sub] & temp) | (color.is_on() ? pixelMaskLUT[x_sub] : 0);
+        (~pixelMaskLUT[x_sub] & temp) | (color.is_on() ? 0 :  pixelMaskLUT[x_sub]);
   } else {
     gs &= 7;
     int x = x0 >> 1;
