@@ -12,12 +12,12 @@ namespace inkplate10 {
 static const char *const TAG = "inkplate";
 
 class Profile {
-public:
+ public:
   Profile(const std::string &name);
   ~Profile();
   void status(const std::string &message);
 
-private:
+ private:
   uint32_t start_time_ = 0;
   std::string name_{};
 };
@@ -27,54 +27,51 @@ Profile::Profile(const std::string &name) : name_(name) {
   ESP_LOGV(TAG, "%s started", name_.c_str());
 }
 
-Profile::~Profile() {
-  ESP_LOGV(TAG, "%s finished (%ums)", name_.c_str(), millis() - start_time_);
-}
+Profile::~Profile() { ESP_LOGV(TAG, "%s finished (%ums)", name_.c_str(), millis() - start_time_); }
 
 void Profile::status(const std::string &message) {
-  ESP_LOGV(TAG, "%s at %s (%ums)", name_.c_str(), message.c_str(),
-           millis() - start_time_);
+  ESP_LOGV(TAG, "%s at %s (%ums)", name_.c_str(), message.c_str(), millis() - start_time_);
 }
 
-#define CL_SET                                                                 \
+#define CL_SET \
   { GPIO.out_w1ts = (1 << this->cl_pin_->get_pin()); }
-#define CL_CLEAR                                                               \
+#define CL_CLEAR \
   { GPIO.out_w1tc = (1 << this->cl_pin_->get_pin()); }
-#define CKV_SET                                                                \
+#define CKV_SET \
   { GPIO.out1_w1ts.val = (1 << this->ckv_pin_->get_pin()); }
-#define CKV_CLEAR                                                              \
+#define CKV_CLEAR \
   { GPIO.out1_w1tc.val = (1 << this->ckv_pin_->get_pin()); }
-#define SPH_SET                                                                \
+#define SPH_SET \
   { GPIO.out1_w1ts.val = (1 << this->sph_pin_->get_pin()); }
-#define SPH_CLEAR                                                              \
+#define SPH_CLEAR \
   { GPIO.out1_w1tc.val = (1 << this->sph_pin_->get_pin()); }
-#define LE_SET                                                                 \
+#define LE_SET \
   { GPIO.out_w1ts = (1 << this->le_pin_->get_pin()); }
-#define LE_CLEAR                                                               \
+#define LE_CLEAR \
   { GPIO.out_w1tc = (1 << this->le_pin_->get_pin()); }
-#define OE_SET                                                                 \
+#define OE_SET \
   { this->oe_pin_->digital_write(true); }
-#define OE_CLEAR                                                               \
+#define OE_CLEAR \
   { this->oe_pin_->digital_write(false); }
-#define GMOD_SET                                                               \
+#define GMOD_SET \
   { this->gmod_pin_->digital_write(true); }
-#define GMOD_CLEAR                                                             \
+#define GMOD_CLEAR \
   { this->gmod_pin_->digital_write(false); }
-#define SPV_SET                                                                \
+#define SPV_SET \
   { this->spv_pin_->digital_write(true); }
-#define SPV_CLEAR                                                              \
+#define SPV_CLEAR \
   { this->spv_pin_->digital_write(false); }
-#define WAKEUP_SET                                                             \
+#define WAKEUP_SET \
   { this->wakeup_pin_->digital_write(true); }
-#define WAKEUP_CLEAR                                                           \
+#define WAKEUP_CLEAR \
   { this->wakeup_pin_->digital_write(false); }
-#define PWRUP_SET                                                              \
+#define PWRUP_SET \
   { this->powerup_pin_->digital_write(true); }
-#define PWRUP_CLEAR                                                            \
+#define PWRUP_CLEAR \
   { this->powerup_pin_->digital_write(false); }
-#define VCOM_SET                                                               \
+#define VCOM_SET \
   { this->vcom_pin_->digital_write(true); }
-#define VCOM_CLEAR                                                             \
+#define VCOM_CLEAR \
   { this->vcom_pin_->digital_write(true); }
 
 void Inkplate10::setup() {
@@ -88,10 +85,10 @@ void Inkplate10::setup() {
 
   WAKEUP_SET
   this->write_bytes(0x09, std::array<uint8_t, 4>{
-                              0b00011011, // Power up seq.
-                              0b00000000, // Power up delay (3mS per rail)
-                              0b00011011, // Power down seq.
-                              0b00000000  // Power down delay (6mS per rail)
+                              0b00011011,  // Power up seq.
+                              0b00000000,  // Power up delay (3mS per rail)
+                              0b00011011,  // Power down seq.
+                              0b00000000   // Power down delay (6mS per rail)
                           });
   WAKEUP_CLEAR
 
@@ -120,29 +117,29 @@ void Inkplate10::initialize_() {
   uint32_t buffer_size = this->get_buffer_length_();
 
   if (this->partial_buffer_ != nullptr) {
-    free(this->partial_buffer_); // NOLINT
+    free(this->partial_buffer_);  // NOLINT
   }
   if (this->partial_buffer_2_ != nullptr) {
-    free(this->partial_buffer_2_); // NOLINT
+    free(this->partial_buffer_2_);  // NOLINT
   }
   if (this->buffer_ != nullptr) {
-    free(this->buffer_); // NOLINT
+    free(this->buffer_);  // NOLINT
   }
 
-  this->buffer_ = (uint8_t *)ps_malloc(buffer_size);
+  this->buffer_ = (uint8_t *) ps_malloc(buffer_size);
   if (this->buffer_ == nullptr) {
     ESP_LOGE(TAG, "Could not allocate buffer for display!");
     this->mark_failed();
     return;
   }
   if (!this->greyscale_) {
-    this->partial_buffer_ = (uint8_t *)ps_malloc(buffer_size);
+    this->partial_buffer_ = (uint8_t *) ps_malloc(buffer_size);
     if (this->partial_buffer_ == nullptr) {
       ESP_LOGE(TAG, "Could not allocate partial buffer for display!");
       this->mark_failed();
       return;
     }
-    this->partial_buffer_2_ = (uint8_t *)ps_malloc(buffer_size * 2);
+    this->partial_buffer_2_ = (uint8_t *) ps_malloc(buffer_size * 2);
     if (this->partial_buffer_2_ == nullptr) {
       ESP_LOGE(TAG, "Could not allocate partial buffer 2 for display!");
       this->mark_failed();
@@ -156,66 +153,50 @@ void Inkplate10::initialize_() {
 
   for (int j = 0; j < 8; ++j) {
     for (uint32_t i = 0; i < 256; ++i) {
-      uint8_t z =
-          (waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j]);
-      glut_[j * 256 + i] =
-          ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
-          (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
-      z = ((waveform3Bit[i & 0x07][j] << 2) |
-           (waveform3Bit[(i >> 4) & 0x07][j]))
-          << 4;
-      glut2_[j * 256 + i] =
-          ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
-          (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
+      uint8_t z = (waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j]);
+      glut_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) | (((z & 0b00010000) >> 4) << 23) |
+                           (((z & 0b11100000) >> 5) << 25);
+      z = ((waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j])) << 4;
+      glut2_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
+                            (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
     }
   }
 
   for (uint32_t i = 0; i < 256; ++i) {
-    pinLUT_[i] = ((i & 0b00000011) << 4) | (((i & 0b00001100) >> 2) << 18) |
-                 (((i & 0b00010000) >> 4) << 23) |
+    pinLUT_[i] = ((i & 0b00000011) << 4) | (((i & 0b00001100) >> 2) << 18) | (((i & 0b00010000) >> 4) << 23) |
                  (((i & 0b11100000) >> 5) << 25);
   }
 }
 
-float Inkplate10::get_setup_priority() const {
-  return setup_priority::PROCESSOR;
-}
+float Inkplate10::get_setup_priority() const { return setup_priority::PROCESSOR; }
 size_t Inkplate10::get_buffer_length_() {
   if (this->greyscale_) {
-    return size_t(this->get_width_internal()) *
-           size_t(this->get_height_internal()) / 2u;
+    return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 2u;
   } else {
-    return size_t(this->get_width_internal()) *
-           size_t(this->get_height_internal()) / 8u;
+    return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8u;
   }
 }
 void Inkplate10::update() {
   Profile p("Inkplate10::update");
   this->do_update_();
 
-  if (this->full_update_every_ > 0 &&
-      this->partial_updates_ >= this->full_update_every_) {
+  if (this->full_update_every_ > 0 && this->partial_updates_ >= this->full_update_every_) {
     this->block_partial_ = true;
   }
 
   this->display();
 }
 void HOT Inkplate10::draw_absolute_pixel_internal(int x0, int y0, Color color) {
-  if (x0 >= this->get_width_internal() || y0 >= this->get_height_internal() ||
-      x0 < 0 || y0 < 0)
+  if (x0 >= this->get_width_internal() || y0 >= this->get_height_internal() || x0 < 0 || y0 < 0)
     return;
 
-  uint8_t gs = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) +
-                (color.blue * 722 / 10000)) >>
-               5;
+  uint8_t gs = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) + (color.blue * 722 / 10000)) >> 5;
   if (this->greyscale_ == false) {
     int x = x0 >> 3;
     int x_sub = x0 & 7;
-    uint8_t temp =
-        *(this->partial_buffer_ + ((this->get_width_internal() >> 3) * y0) + x);
+    uint8_t temp = *(this->partial_buffer_ + ((this->get_width_internal() >> 3) * y0) + x);
     *(this->partial_buffer_ + (this->get_width_internal() / 8 * y0) + x) =
-        (~pixelMaskLUT[x_sub] & temp) |
-        (color.is_on() ? 0 : pixelMaskLUT[x_sub]);
+        (~pixelMaskLUT[x_sub] & temp) | (color.is_on() ? 0 : pixelMaskLUT[x_sub]);
   } else {
     gs &= 7;
     int x = x0 >> 1;
@@ -265,8 +246,7 @@ void Inkplate10::eink_off_() {
   OE_CLEAR;
   GMOD_CLEAR;
 
-  GPIO.out &= ~(DATA | (1 << this->cl_pin_->get_pin()) |
-                (1 << this->le_pin_->get_pin()));
+  GPIO.out &= ~(DATA | (1 << this->cl_pin_->get_pin()) | (1 << this->le_pin_->get_pin()));
   CKV_CLEAR;
   SPH_CLEAR;
   SPV_CLEAR;
@@ -334,9 +314,7 @@ void Inkplate10::fill(Color color) {
   Profile p("Inkplate10::fill");
 
   if (this->greyscale_) {
-    uint8_t fill = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) +
-                    (color.blue * 722 / 10000)) >>
-                   5;
+    uint8_t fill = ((color.red * 2126 / 10000) + (color.green * 7152 / 10000) + (color.blue * 722 / 10000)) >> 5;
     memset(this->buffer_, (fill << 4) | fill, this->get_buffer_length_());
   } else {
     uint8_t fill = color.is_on() ? 0x00 : 0xFF;
@@ -371,8 +349,7 @@ void Inkplate10::display1b_() {
   clean_fast_(0, 10);
   clean_fast_(1, 10);
   for (int k = 0; k < 5; k++) {
-    uint32_t _pos =
-        (this->get_height_internal() * this->get_width_internal() / 8) - 1;
+    uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
     this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
       uint8_t dram = ~(*(this->buffer_ + _pos));
@@ -423,8 +400,7 @@ void Inkplate10::display3b_() {
   clean_fast_(1, 10);
 
   for (int k = 0; k < 8; k++) {
-    uint8_t *dp = this->buffer_ + (this->get_height_internal() *
-                                   this->get_width_internal() / 2);
+    uint8_t *dp = this->buffer_ + (this->get_height_internal() * this->get_width_internal() / 2);
 
     vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
@@ -468,10 +444,8 @@ bool Inkplate10::partial_update_() {
 
   this->partial_updates_++;
 
-  uint32_t _pos =
-      (this->get_width_internal() * this->get_height_internal() / 8) - 1;
-  uint32_t n =
-      (this->get_width_internal() * this->get_height_internal() / 4) - 1;
+  uint32_t _pos = (this->get_width_internal() * this->get_height_internal() / 8) - 1;
+  uint32_t n = (this->get_width_internal() * this->get_height_internal() / 4) - 1;
 
   uint32_t changeCount = 0;
 
@@ -479,8 +453,8 @@ bool Inkplate10::partial_update_() {
     for (int j = 0; j < this->get_width_internal() / 8; ++j) {
       uint8_t diffw = *(this->buffer_ + _pos) & ~*(partial_buffer_ + _pos);
       uint8_t diffb = ~*(this->buffer_ + _pos) & *(partial_buffer_ + _pos);
-      if (diffw) // count pixels turning from black to white as these are
-                 // visible blur
+      if (diffw)  // count pixels turning from black to white as these are
+                  // visible blur
       {
         for (int bv = 1; bv < 256; bv <<= 1) {
           if (diffw & bv)
@@ -490,8 +464,7 @@ bool Inkplate10::partial_update_() {
       _pos--;
       *(this->partial_buffer_2_ + n) = LUTW[diffw >> 4] & (LUTB[diffb >> 4]);
       n--;
-      *(this->partial_buffer_2_ + n) =
-          LUTW[diffw & 0x0F] & (LUTB[diffb & 0x0F]);
+      *(this->partial_buffer_2_ + n) = LUTW[diffw & 0x0F] & (LUTB[diffb & 0x0F]);
       n--;
     }
   }
@@ -577,12 +550,12 @@ void Inkplate10::clean() {
   Profile p("Inkplate10::clean");
 
   eink_on_();
-  clean_fast_(0, 1);  // White
-  clean_fast_(0, 8);  // White to White
-  clean_fast_(0, 1);  // White to Black
-  clean_fast_(0, 8);  // Black to Black
-  clean_fast_(2, 1);  // Black to White
-  clean_fast_(1, 10); // White to White
+  clean_fast_(0, 1);   // White
+  clean_fast_(0, 8);   // White to White
+  clean_fast_(0, 1);   // White to Black
+  clean_fast_(0, 8);   // Black to Black
+  clean_fast_(2, 1);   // Black to White
+  clean_fast_(1, 10);  // White to White
 }
 
 void Inkplate10::clean_fast_(uint8_t c, uint8_t rep) {
@@ -658,7 +631,7 @@ void Inkplate10::pins_as_outputs_() {
   this->display_data_7_pin_->pin_mode(gpio::FLAG_OUTPUT);
 }
 
-} // namespace inkplate10
-} // namespace esphome
+}  // namespace inkplate10
+}  // namespace esphome
 
 #endif
