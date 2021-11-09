@@ -33,8 +33,7 @@ CONF_POWERUP_PIN = "powerup_pin"
 CONF_SPH_PIN = "sph_pin"
 CONF_SPV_PIN = "spv_pin"
 CONF_VCOM_PIN = "vcom_pin"
-
-
+CONF_POWER_CONTROL = "power_control"
 inkplate10_ns = cg.esphome_ns.namespace("inkplate10")
 Inkplate10 = inkplate10_ns.class_(
     "Inkplate10", cg.PollingComponent, i2c.I2CDevice, display.DisplayBuffer
@@ -47,13 +46,14 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_GREYSCALE, default=False): cv.boolean,
             cv.Optional(CONF_PARTIAL_UPDATING, default=True): cv.boolean,
             cv.Optional(CONF_FULL_UPDATE_EVERY, default=10): cv.uint32_t,
+            cv.Optional(CONF_POWER_CONTROL, default=False): cv.boolean,
             # Control pins
-            cv.Required(CONF_CKV_PIN): pins.gpio_output_pin_schema,
+            cv.Required(CONF_CKV_PIN): pins.internal_gpio_output_pin_schema,
+            cv.Required(CONF_SPH_PIN): pins.internal_gpio_output_pin_schema,
             cv.Required(CONF_GMOD_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_GPIO0_ENABLE_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_OE_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_POWERUP_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_SPH_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_SPV_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_VCOM_PIN): pins.gpio_output_pin_schema,
             cv.Required(CONF_WAKEUP_PIN): pins.gpio_output_pin_schema,
@@ -109,6 +109,7 @@ async def to_code(config):
     cg.add(var.set_greyscale(config[CONF_GREYSCALE]))
     cg.add(var.set_partial_updating(config[CONF_PARTIAL_UPDATING]))
     cg.add(var.set_full_update_every(config[CONF_FULL_UPDATE_EVERY]))
+    cg.add(var.set_power_control(config[CONF_POWER_CONTROL]))
 
     ckv = await cg.gpio_pin_expression(config[CONF_CKV_PIN])
     cg.add(var.set_ckv_pin(ckv))
