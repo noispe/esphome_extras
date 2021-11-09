@@ -83,14 +83,14 @@ void Inkplate10::setup() {
   this->gpio0_enable_pin_->setup();
   this->gpio0_enable_pin_->digital_write(true);
 
-  this->wakeup_pin_->digital_write(true);
+  WAKEUP_SET
   this->write_bytes(0x09, std::array<uint8_t, 4>{
                               0b00011011,  // Power up seq.
                               0b00000000,  // Power up delay (3mS per rail)
                               0b00011011,  // Power down seq.
                               0b00000000   // Power down delay (6mS per rail)
                           });
-  this->wakeup_pin_->digital_write(false);
+  WAKEUP_CLEAR
 
   // control pins
   this->cl_pin_->setup();
@@ -312,6 +312,7 @@ void Inkplate10::eink_on_() {
 }
 
 void Inkplate10::fill(Color color) {
+  ESP_LOGD(TAG, "%x,%x,%x fill", color.r, color.g, color.b);
   Profile p("Inkplate10::fill");
 
   if (this->greyscale_) {
@@ -351,8 +352,10 @@ void Inkplate10::display1b_() {
   clean_fast_(1, 10);
   for (int k = 0; k < 5; k++) {
     uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
+
     this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
+      ESP_LOGV(TAG, "pos %d", _pos);
       uint8_t dram = ~(*(this->buffer_ + _pos));
       uint8_t data = LUTW[(dram >> 4) & 0x0F];
       this->hscan_start_(pinLUT_[data]);
