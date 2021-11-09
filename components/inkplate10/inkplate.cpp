@@ -343,7 +343,7 @@ void Inkplate10::display1b_() {
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
 
   uint32_t CL = (1 << this->cl_pin_->get_pin());
-
+uint32_t pix = 0;
   this->eink_on_();
 
   clean_fast_(0, 10);
@@ -352,10 +352,8 @@ void Inkplate10::display1b_() {
   clean_fast_(1, 10);
   for (int k = 0; k < 5; k++) {
     uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
-
     this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
-      ESP_LOGV(TAG, "pos %d", _pos);
       uint8_t dram = ~(*(this->buffer_ + _pos));
       uint8_t data = LUTW[(dram >> 4) & 0x0F];
       this->hscan_start_(pinLUT_[data]);
@@ -364,6 +362,7 @@ void Inkplate10::display1b_() {
       GPIO.out_w1tc = DATA | CL;
       _pos--;
       for (int j = 0; j < ((this->get_width_internal() / 8) - 1); j++) {
+        pix += *(this->buffer_ + _pos) > 0 ? 1 : 0;
         dram = ~(*(this->buffer_ + _pos));
         data = LUTW[(dram >> 4) & 0x0F];
         GPIO.out_w1ts = pinLUT_[data] | CL;
@@ -379,6 +378,7 @@ void Inkplate10::display1b_() {
     }
     delayMicroseconds(230);
   }
+  ESP_LOGD(TAG, "drew %d pixels", pix);
 
   this->clean_fast_(2, 2);
   this->clean_fast_(3, 1);
