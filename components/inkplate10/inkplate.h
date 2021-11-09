@@ -40,6 +40,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   }
   void set_partial_updating(bool partial_updating) { this->partial_updating_ = partial_updating; }
   void set_full_update_every(uint32_t full_update_every) { this->full_update_every_ = full_update_every; }
+  void set_power_control(bool enable) { this->power_control_ = enable; }
 
   void set_display_data_0_pin(InternalGPIOPin *data) { this->display_data_0_pin_ = data; }
   void set_display_data_1_pin(InternalGPIOPin *data) { this->display_data_1_pin_ = data; }
@@ -66,6 +67,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
 
   void dump_config() override;
 
+  void power_off();
   void display();
   void clean();
   void fill(Color color) override;
@@ -77,7 +79,9 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   uint8_t get_panel_state() { return this->panel_on_; }
   bool get_greyscale() { return this->greyscale_; }
   bool get_partial_updating() { return this->partial_updating_; }
-  uint8_t get_temperature() { return this->temperature_; }
+
+  void poweron();
+  void poweroff();
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -105,40 +109,22 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
 
   size_t get_buffer_length_();
 
-  int get_data_pin_mask_() {
-    int data = 0;
-    data |= (1 << this->display_data_0_pin_->get_pin());
-    data |= (1 << this->display_data_1_pin_->get_pin());
-    data |= (1 << this->display_data_2_pin_->get_pin());
-    data |= (1 << this->display_data_3_pin_->get_pin());
-    data |= (1 << this->display_data_4_pin_->get_pin());
-    data |= (1 << this->display_data_5_pin_->get_pin());
-    data |= (1 << this->display_data_6_pin_->get_pin());
-    data |= (1 << this->display_data_7_pin_->get_pin());
-    return data;
-  }
-
-  uint32_t get_pin_address_(uint8_t data) const {
-    return ((data & 0b00000011) << 4) | (((data & 0b00001100) >> 2) << 18) | (((data & 0b00010000) >> 4) << 23) |
-           (((data & 0b11100000) >> 5) << 25);
-  }
-
   std::array<uint32_t, 256 * 8> glut_{};
   std::array<uint32_t, 256 * 8> glut2_{};
   std::array<uint32_t, 256> pinLUT_{};
 
-  uint8_t panel_on_ = 0;
-  uint8_t temperature_;
+  bool panel_on_ = false;
 
   uint8_t *partial_buffer_{nullptr};
   uint8_t *partial_buffer_2_{nullptr};
 
-  uint32_t full_update_every_;
+  uint32_t full_update_every_{0};
   uint32_t partial_updates_{0};
 
-  bool block_partial_;
-  bool greyscale_;
-  bool partial_updating_;
+  bool block_partial_ = false;
+  bool greyscale_ = false;
+  bool partial_updating_ = false;
+  bool power_control_ = false;
 
   InternalGPIOPin *display_data_0_pin_;
   InternalGPIOPin *display_data_1_pin_;

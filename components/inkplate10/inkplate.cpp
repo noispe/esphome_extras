@@ -239,7 +239,7 @@ void Inkplate10::dump_config() {
 }
 
 void Inkplate10::eink_off_() {
-  if (panel_on_ == 0)
+  if (!panel_on_)
     return;
   Profile p("Inkplate10::eink_off_");
 
@@ -261,11 +261,11 @@ void Inkplate10::eink_off_() {
   WAKEUP_CLEAR;
 
   pins_z_state_();
-  panel_on_ = 0;
+  panel_on_ = false;
 }
 
 void Inkplate10::eink_on_() {
-  if (panel_on_ == 1)
+  if (panel_on_)
     return;
   Profile p("Inkplate10::eink_on_");
 
@@ -306,7 +306,7 @@ void Inkplate10::eink_on_() {
   }
 
   OE_SET;
-  panel_on_ = 1;
+  panel_on_ = true;
 }
 
 void Inkplate10::fill(Color color) {
@@ -382,7 +382,9 @@ void Inkplate10::display1b_() {
   this->clean_fast_(3, 1);
 
   this->vscan_start_();
-  this->eink_off_();
+  if (!this->power_control_) {
+    this->eink_off_();
+  }
   this->block_partial_ = false;
   this->partial_updates_ = 0;
 }
@@ -431,7 +433,9 @@ void Inkplate10::display3b_() {
   }
   clean_fast_(3, 1);
   vscan_start_();
-  eink_off_();
+  if (!this->power_control_) {
+    eink_off_();
+  }
 }
 
 bool Inkplate10::partial_update_() {
@@ -500,7 +504,9 @@ bool Inkplate10::partial_update_() {
   clean_fast_(2, 2);
   clean_fast_(3, 1);
   vscan_start_();
-  eink_off_();
+  if (!this->power_control_) {
+    eink_off_();
+  }
 
   memcpy(this->buffer_, this->partial_buffer_, this->get_buffer_length_());
   ESP_LOGV(TAG, "%d pixels changed", changeCount);
@@ -631,6 +637,7 @@ void Inkplate10::pins_as_outputs_() {
   this->display_data_7_pin_->pin_mode(gpio::FLAG_OUTPUT);
 }
 
+void Inkplate10::power_off() { this->eink_off_(); }
 }  // namespace inkplate10
 }  // namespace esphome
 
