@@ -29,9 +29,9 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   const uint8_t waveform3Bit[8][8] = {{0, 0, 0, 0, 0, 0, 1, 0}, {0, 0, 2, 2, 2, 1, 1, 0}, {0, 2, 1, 1, 2, 2, 1, 0},
                                       {1, 2, 2, 1, 2, 2, 1, 0}, {0, 2, 1, 2, 2, 2, 1, 0}, {2, 2, 2, 2, 2, 2, 1, 0},
                                       {0, 0, 0, 0, 2, 1, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
-  const uint8_t waveform3BitLight[8][8] = {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 2, 2, 1, 2, 1, 0}, {0, 2, 2, 1, 2, 2, 1, 0},
-                                           {0, 0, 2, 2, 2, 2, 1, 0}, {0, 0, 2, 1, 1, 1, 2, 0}, {0, 2, 2, 2, 1, 1, 2, 0},
-                                           {0, 0, 0, 2, 1, 2, 2, 0}, {0, 0, 2, 2, 2, 2, 2, 0}};
+  const uint8_t waveform3BitLight[8][8] = {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 2, 2, 2, 1, 1, 0}, {0, 0, 2, 2, 1, 2, 1, 0},
+                                           {0, 2, 2, 1, 2, 2, 1, 0}, {0, 0, 2, 1, 1, 1, 2, 0}, {0, 2, 2, 2, 1, 1, 2, 0},
+                                           {0, 0, 0, 0, 1, 2, 2, 0}, {0, 0, 0, 2, 2, 2, 2, 0}};
 
   void set_greyscale(bool greyscale) {
     this->greyscale_ = greyscale;
@@ -97,7 +97,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   void vscan_write_();
 
   void eink_off_();
-  void eink_on_();
+  bool eink_on_();
 
   void setup_pins_();
   void pins_z_state_();
@@ -108,7 +108,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   int get_height_internal() override { return 825; }
 
   size_t get_buffer_length_();
-
+  const uint8_t waveform3_bit_(uint32_t r, uint32_t c) const;
   std::array<uint32_t, 256 * 8> glut_{};
   std::array<uint32_t, 256 * 8> glut2_{};
   std::array<uint32_t, 256> pinLUT_{};
@@ -125,6 +125,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   bool greyscale_ = false;
   bool partial_updating_ = false;
   bool power_control_ = false;
+  bool light_mode_ = false;
 
   InternalGPIOPin *display_data_0_pin_;
   InternalGPIOPin *display_data_1_pin_;

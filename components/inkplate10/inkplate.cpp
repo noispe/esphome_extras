@@ -153,10 +153,10 @@ void Inkplate10::initialize_() {
 
   for (int j = 0; j < 8; ++j) {
     for (uint32_t i = 0; i < 256; ++i) {
-      uint8_t z = (waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j]);
+      uint8_t z = (this->waveform3_bit_(i & 0x07, j) << 2) | (this->waveform3_bit_((i >> 4) & 0x07, j));
       glut_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) | (((z & 0b00010000) >> 4) << 23) |
                            (((z & 0b11100000) >> 5) << 25);
-      z = ((waveform3Bit[i & 0x07][j] << 2) | (waveform3Bit[(i >> 4) & 0x07][j])) << 4;
+      z = ((this->waveform3_bit_(i & 0x07, j) << 2) | (this->waveform3_bit_((i >> 4) & 0x07, j))) << 4;
       glut2_[j * 256 + i] = ((z & 0b00000011) << 4) | (((z & 0b00001100) >> 2) << 18) |
                             (((z & 0b00010000) >> 4) << 23) | (((z & 0b11100000) >> 5) << 25);
     }
@@ -264,9 +264,9 @@ void Inkplate10::eink_off_() {
   panel_on_ = false;
 }
 
-void Inkplate10::eink_on_() {
+bool Inkplate10::eink_on_() {
   if (panel_on_)
-    return;
+    return panel_on_;
   Profile p("Inkplate10::eink_on_");
 
   WAKEUP_SET;
@@ -302,11 +302,13 @@ void Inkplate10::eink_on_() {
     VCOM_CLEAR;
     PWRUP_CLEAR;
     this->mark_failed();
-    return;
+    panel_on_ = false;
+    return panel_on_;
   }
 
   OE_SET;
   panel_on_ = true;
+  return panel_on_;
 }
 
 void Inkplate10::fill(Color color) {
@@ -342,30 +344,51 @@ void Inkplate10::display1b_() {
 
   uint32_t CL = (1 << this->cl_pin_->get_pin());
   uint32_t pix = 0;
-  this->eink_on_();
+  uint8_t repeat = 0;
 
-  clean_fast_(0, 10);
-  clean_fast_(1, 10);
-  clean_fast_(0, 10);
-  clean_fast_(1, 10);
-  for (int k = 0; k < 5; k++) {
+  if (!this->eink_on_())
+    return;
+
+  if (this->light_mode_) {
+    this->clean_fast_(0, 1);
+    this->clean_fast_(1, 12);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 9);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 12);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 9);
+    repeat = 3;
+  } else {
+    this->clean_fast_(0, 1);
+    this->clean_fast_(1, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 10);
+    repeat = 5;
+  }
+
+  for (int k = 0; k < repeat; k++) {
     uint32_t _pos = (this->get_height_internal() * this->get_width_internal() / 8) - 1;
     this->vscan_start_();
     for (int i = 0; i < this->get_height_internal(); i++) {
       uint8_t dram = ~(*(this->buffer_ + _pos));
-      uint8_t data = LUTW[(dram >> 4) & 0x0F];
+      uint8_t data = LUTB[(dram >> 4) & 0x0F];
       this->hscan_start_(pinLUT_[data]);
-      data = LUTW[dram & 0x0F];
+      data = LUTB[dram & 0x0F];
       GPIO.out_w1ts = pinLUT_[data] | CL;
       GPIO.out_w1tc = DATA | CL;
       _pos--;
       for (int j = 0; j < ((this->get_width_internal() / 8) - 1); j++) {
         pix += *(this->buffer_ + _pos) > 0 ? 1 : 0;
-        dram = ~(*(this->buffer_ + _pos));
-        data = LUTW[(dram >> 4) & 0x0F];
+        dram = (*(this->buffer_ + _pos));
+        data = LUTB[(dram >> 4) & 0x0F];
         GPIO.out_w1ts = pinLUT_[data] | CL;
         GPIO.out_w1tc = DATA | CL;
-        data = LUTW[dram & 0x0F];
+        data = LUTB[dram & 0x0F];
         GPIO.out_w1ts = pinLUT_[data] | CL;
         GPIO.out_w1tc = DATA | CL;
         _pos--;
@@ -394,12 +417,28 @@ void Inkplate10::display3b_() {
 
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
-  eink_on_();
+  if (!this->eink_on_())
+    return;
 
-  clean_fast_(0, 10);
-  clean_fast_(1, 10);
-  clean_fast_(0, 10);
-  clean_fast_(1, 10);
+  if (this->light_mode_) {
+    this->clean_fast_(1, 1);
+    this->clean_fast_(0, 7);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 12);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 7);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 12);
+  } else {
+    this->clean_fast_(1, 1);
+    this->clean_fast_(0, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(0, 10);
+    this->clean_fast_(2, 1);
+    this->clean_fast_(1, 10);
+  }
 
   for (int k = 0; k < 8; k++) {
     uint8_t *dp = this->buffer_ + (this->get_height_internal() * this->get_width_internal() / 2);
@@ -450,7 +489,7 @@ bool Inkplate10::partial_update_() {
 
   uint32_t _pos = (this->get_width_internal() * this->get_height_internal() / 8) - 1;
   uint32_t n = (this->get_width_internal() * this->get_height_internal() / 4) - 1;
-
+  uint8_t repeat = this->light_mode_ ? 4 : 5;
   uint32_t changeCount = 0;
 
   for (int i = 0; i < this->get_height_internal(); ++i) {
@@ -475,10 +514,12 @@ bool Inkplate10::partial_update_() {
 
   p.status("update buffer built");
 
-  eink_on_();
+  if (!eink_on_())
+    return false;
+
   uint32_t CL = (1 << this->cl_pin_->get_pin());
 
-  for (int k = 0; k < 5; ++k) {
+  for (int k = 0; k < repeat; ++k) {
     vscan_start_();
     n = (this->get_width_internal() * this->get_height_internal() / 4) - 1;
     for (int i = 0; i < this->get_height_internal(); ++i) {
@@ -638,6 +679,14 @@ void Inkplate10::pins_as_outputs_() {
 }
 
 void Inkplate10::power_off() { this->eink_off_(); }
+
+const uint8_t Inkplate10::waveform3_bit_(uint32_t r, uint32_t c) const {
+  if (this->light_mode_) {
+    return waveform3BitLight[r][c];
+  }
+  return waveform3Bit[r][c];
+}
+
 }  // namespace inkplate10
 }  // namespace esphome
 
