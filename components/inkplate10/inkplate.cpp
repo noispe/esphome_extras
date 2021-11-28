@@ -327,14 +327,17 @@ void Inkplate10::display() {
   Profile p("Inkplate10::display");
 
   if (this->greyscale_) {
+    p.status("greyscale update");
     this->display3b_();
-  } else {
-    if (this->partial_updating_ && this->partial_update_()) {
-      p.status("partial update");
-      return;
-    }
-    this->display1b_();
+    return;
   }
+
+  p.status("try partial update");
+  if (this->partial_updating_ && this->partial_update_()) {
+    return;
+  }
+  p.status("full update");
+  this->display1b_();
 }
 
 void Inkplate10::display1b_() {
@@ -477,11 +480,11 @@ void Inkplate10::display3b_() {
   }
 }
 
-bool Inkplate10::partial_update_() {
+bool Inkplate10::partial_update_(bool force) {
   Profile p("Inkplate10::partial_update_");
   if (this->greyscale_)
     return false;
-  if (this->block_partial_) {
+  if (this->block_partial_ && !force) {
     return false;
   }
 

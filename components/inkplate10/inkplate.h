@@ -88,7 +88,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   void display1b_();
   void display3b_();
   void initialize_();
-  bool partial_update_();
+  bool partial_update_(bool force = false);
   void clean_fast_(uint8_t c, uint8_t rep);
 
   void hscan_start_(uint32_t d);
