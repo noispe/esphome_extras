@@ -352,7 +352,7 @@ void Inkplate10::display1b_() {
   if (!this->eink_on_())
     return;
 
-  if (this->light_mode_) {
+  if (this->light_waveform_) {
     this->clean_fast_(0, 1);
     this->clean_fast_(1, 12);
     this->clean_fast_(2, 1);
@@ -423,7 +423,7 @@ void Inkplate10::display3b_() {
   if (!this->eink_on_())
     return;
 
-  if (this->light_mode_) {
+  if (this->light_waveform_) {
     this->clean_fast_(1, 1);
     this->clean_fast_(0, 7);
     this->clean_fast_(2, 1);
@@ -492,7 +492,7 @@ bool Inkplate10::partial_update_(bool force) {
 
   uint32_t _pos = (this->get_width_internal() * this->get_height_internal() / 8) - 1;
   uint32_t n = (this->get_width_internal() * this->get_height_internal() / 4) - 1;
-  uint8_t repeat = this->light_mode_ ? 4 : 5;
+  uint8_t repeat = this->light_waveform_ ? 4 : 5;
   uint32_t changeCount = 0;
 
   for (int i = 0; i < this->get_height_internal(); ++i) {
@@ -684,7 +684,7 @@ void Inkplate10::pins_as_outputs_() {
 void Inkplate10::power_off() { this->eink_off_(); }
 
 const uint8_t Inkplate10::waveform3_bit_(uint32_t r, uint32_t c) const {
-  if (this->light_mode_) {
+  if (this->light_waveform_) {
     return waveform3BitLight[r][c];
   }
   return waveform3Bit[r][c];

@@ -39,6 +39,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
     this->block_partial_ = true;
   }
   void set_partial_updating(bool partial_updating) { this->partial_updating_ = partial_updating; }
+  void set_light_waveform(bool light_waveform) { this->light_waveform_ = light_waveform; }
   void set_full_update_every(uint32_t full_update_every) { this->full_update_every_ = full_update_every; }
   void set_power_control(bool enable) { this->power_control_ = enable; }
 
@@ -125,7 +126,7 @@ class Inkplate10 : public PollingComponent, public display::DisplayBuffer, publi
   bool greyscale_ = false;
   bool partial_updating_ = false;
   bool power_control_ = false;
-  bool light_mode_ = false;
+  bool light_waveform_ = false;
 
   InternalGPIOPin *display_data_0_pin_;
   InternalGPIOPin *display_data_1_pin_;

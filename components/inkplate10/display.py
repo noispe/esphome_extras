@@ -34,6 +34,7 @@ CONF_SPH_PIN = "sph_pin"
 CONF_SPV_PIN = "spv_pin"
 CONF_VCOM_PIN = "vcom_pin"
 CONF_POWER_CONTROL = "power_control"
+CONF_LIGHT_WAVEFORM = "use_light_waveform"
 inkplate10_ns = cg.esphome_ns.namespace("inkplate10")
 Inkplate10 = inkplate10_ns.class_(
     "Inkplate10", cg.PollingComponent, i2c.I2CDevice, display.DisplayBuffer
@@ -45,6 +46,7 @@ CONFIG_SCHEMA = cv.All(
             cv.GenerateID(): cv.declare_id(Inkplate10),
             cv.Optional(CONF_GREYSCALE, default=False): cv.boolean,
             cv.Optional(CONF_PARTIAL_UPDATING, default=True): cv.boolean,
+            cv.Optional(CONF_LIGHT_WAVEFORM, default=False): cv.boolean,
             cv.Optional(CONF_FULL_UPDATE_EVERY, default=10): cv.uint32_t,
             cv.Optional(CONF_POWER_CONTROL, default=False): cv.boolean,
             # Control pins
@@ -108,6 +110,7 @@ async def to_code(config):
 
     cg.add(var.set_greyscale(config[CONF_GREYSCALE]))
     cg.add(var.set_partial_updating(config[CONF_PARTIAL_UPDATING]))
+    cg.add(var.set_light_waveform(config[CONF_LIGHT_WAVEFORM]))
     cg.add(var.set_full_update_every(config[CONF_FULL_UPDATE_EVERY]))
     cg.add(var.set_power_control(config[CONF_POWER_CONTROL]))
 
