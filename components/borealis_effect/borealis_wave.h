@@ -19,13 +19,13 @@ class BorealisWave {
   float random_float_(float min, float max);
   uint8_t get_weighted_color_(uint8_t weighting);
 
-  int ttl_ = random_int_(500, 1501);
+  int ttl_ = 1;
   uint8_t basecolor_ = 1;  // 1
-  float basealpha_ = random_float_(50, 101) / 100.0f;
+  float basealpha_ = 1;
   int age_ = 0;
   float width_ = 1.0f;  // 1
   float center_ = 1;    // 1
-  bool going_left_ = random_int_(0, 2) == 0;
+  bool going_left_ = true;
   float speed_ = 1;  // 1
   bool alive_ = true;
   uint8_t num_leds_ = 1;                  // Number of LEDS on strip
