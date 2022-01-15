@@ -9,18 +9,18 @@ BorealisLightEffect = borealis_ns.class_("BorealisLightEffect", AddressableLight
 
 CONFIG_SCHEMA = cv.Schema({})
 
+
 @register_addressable_effect(
     "borealis",
     BorealisLightEffect,
-    "BOREALIS",
+    "Borealis Effect",
     {
-        cv.Required(CONF_NUM_LEDS): cv.positive_not_null_int,
-        cv.Optional(CONF_WIDTH): cv.positive_int(1),
-        cv.Optional(CONF_WEIGHT): cv.positive_int(1),
-        cv.Optional(CONF_SPEED): cv.positive_int(1),
+        cv.Required(CONF_NUM_LEDS): cv.uint8_t,
+        cv.Optional(CONF_WIDTH): cv.int_range(1, 10),
+        cv.Optional(CONF_WEIGHT): cv.int_range(1, 10),
+        cv.Optional(CONF_SPEED): cv.int_range(1, 10),
     },
 )
-
 async def borealis_light_effect_to_code(config, effect_id):
     effect = cg.new_Pvariable(effect_id, config[CONF_NAME])
     if config[CONF_WIDTH]:
