@@ -7,14 +7,14 @@ from esphome.const import CONF_NAME, CONF_WIDTH, CONF_SPEED, CONF_WEIGHT, CONF_N
 borealis_ns = cg.esphome_ns.namespace("borealis")
 BorealisLightEffect = borealis_ns.class_("BorealisLightEffect", AddressableLightEffect)
 
-CONFIG_SCHEMA = cv.All(cv.Schema({}))
+CONFIG_SCHEMA = cv.Schema({})
 
 @register_addressable_effect(
     "borealis",
     BorealisLightEffect,
     "BOREALIS",
     {
-        cv.Required(CONF_NUM_LEDS): cv.positive_int(1),
+        cv.Required(CONF_NUM_LEDS): cv.positive_not_null_int,
         cv.Optional(CONF_WIDTH): cv.positive_int(1),
         cv.Optional(CONF_WEIGHT): cv.positive_int(1),
         cv.Optional(CONF_SPEED): cv.positive_int(1),
