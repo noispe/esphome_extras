@@ -29,7 +29,7 @@ BorealisWave::BorealisWave(uint8_t num_leds, uint8_t width_factor, uint8_t color
       wave_color_weight_preset_(color_weight_preset),
       wave_speed_factor_(speed_factor) {
   width_ = random_float_(num_leds_ / 10, num_leds_ / wave_width_factor_);
-  center_ = random_float_(0, 101) / 100.0f * num_leds_;
+  center_ = random_float_(25, 76) / 100.0f * num_leds_;
   basecolor_ = get_weighted_color_(wave_color_weight_preset_);
   speed_ = random_float_(10, 30) / 100.0f * wave_speed_factor_;
   basealpha_ = random_float_(75, 101) / 100.0f;
