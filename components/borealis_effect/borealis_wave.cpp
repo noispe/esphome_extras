@@ -41,21 +41,21 @@ optional<Color> BorealisWave::get_color_for_led(int index) const {
     // Offset of this led from center of wave
     // The further away from the center, the dimmer the LED
     int offset = abs(index - center_);
-    float offsetFactor = (float) offset / (width_ / 2);
+    float offset_factor = (float) offset / (width_ / 2.0f);
 
     // The age of the wave determines it brightness.
     // At half its maximum age it will be the brightest.
-    float ageFactor = 1;
+    float age_factor = 1;
     if ((float) age_ / ttl_ < 0.5) {
-      ageFactor = (float) age_ / (ttl_ / 2);
+      age_factor = (float) age_ / (ttl_ / 2.0f);
     } else {
-      ageFactor = (float) (ttl_ - age_) / ((float) ttl_ * 0.5);
+      age_factor = (float) (ttl_ - age_) / ((float) ttl_ * 0.5f);
     }
 
     // Calculate color based on above factors and basealpha value
-    rgb.r = allowedcolors[basecolor_][0] * (1 - offsetFactor) * ageFactor * basealpha_;
-    rgb.g = allowedcolors[basecolor_][1] * (1 - offsetFactor) * ageFactor * basealpha_;
-    rgb.b = allowedcolors[basecolor_][2] * (1 - offsetFactor) * ageFactor * basealpha_;
+    rgb.r = allowedcolors[basecolor_][0] * (1 - offset_factor) * age_factor * basealpha_;
+    rgb.g = allowedcolors[basecolor_][1] * (1 - offset_factor) * age_factor * basealpha_;
+    rgb.b = allowedcolors[basecolor_][2] * (1 - offset_factor) * age_factor * basealpha_;
 
     return rgb;
   }
@@ -110,14 +110,10 @@ uint8_t BorealisWave::get_weighted_color_(uint8_t weighting) {
   return 0;
 }
 
-int BorealisWave::random_int_(int min, int max) {
-  int base = random_double();
-  return min + base % ((max + 1) - min);
-}
+int BorealisWave::random_int_(int min, int max) { return random_uint32() % (max - min + 1) + min; }
 
 float BorealisWave::random_float_(float min, float max) {
-  float base = random_float();
-  return min + base * (max - min);
+  return (double) random_uint32() / UINT32_MAX * (max - min) + min;
 }
 
 void borealis::BorealisLightEffect::blank_all_leds_(light::AddressableLight &it) {
