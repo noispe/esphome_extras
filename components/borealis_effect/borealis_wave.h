@@ -7,27 +7,7 @@
 namespace esphome {
 
 class BorealisWave {
-
  public:
-  // List of colors allowed for waves
-  // The first dimension of this array must match the second dimension of the colorwighting array
-  static constexpr uint8_t allowedcolors[5][3] = {
-      {17, 177, 13},    // Greenish
-      {148, 242, 5},    // Greenish
-      {25, 173, 121},   // Turquoise
-      {250, 77, 127},   // Pink
-      {171, 101, 221},  // Purple
-  };
-
-  // Colorweighing allows to give some colors more weight so it is more likely to be choosen for a wave.
-  // The second dimension of this array must match the first dimension of the allowedcolors array
-  // Here are 3 presets.
-  static constexpr uint8_t colorweighting[3][5] = {
-      {10, 10, 10, 10, 10},  // Weighting equal (every color is equally likely)
-      {2, 2, 2, 6, 6},       // Weighting reddish (red colors are more likely)
-      {6, 6, 6, 2, 2}        // Weighting greenish (green colors are more likely)
-  };
-
   BorealisWave() = default;
   BorealisWave(uint8_t num_leds, uint8_t width_factor, uint8_t color_weight_preset = 1, uint8_t speed_factor = 3);
   optional<Color> get_color_for_led(int index) const;
