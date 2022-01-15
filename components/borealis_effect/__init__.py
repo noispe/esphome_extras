@@ -16,19 +16,16 @@ CONFIG_SCHEMA = cv.Schema({})
     "Borealis Effect",
     {
         cv.Required(CONF_NUM_LEDS): cv.uint8_t,
-        cv.Optional(CONF_WIDTH): cv.int_range(1, 10),
-        cv.Optional(CONF_WEIGHT): cv.int_range(1, 10),
-        cv.Optional(CONF_SPEED): cv.int_range(1, 10),
+        cv.Optional(CONF_WIDTH, default=1): cv.int_range(1, 10),
+        cv.Optional(CONF_WEIGHT, default=1): cv.int_range(1, 10),
+        cv.Optional(CONF_SPEED, default=3): cv.int_range(1, 10),
     },
 )
 async def borealis_light_effect_to_code(config, effect_id):
     effect = cg.new_Pvariable(effect_id, config[CONF_NAME])
-    if config[CONF_WIDTH] != None:
-        effect.set_width_factor(config[CONF_WIDTH])
-    if config[CONF_WEIGHT] != None:
-        effect.set_color_weight_preset(config[CONF_WEIGHT])
-    if config[CONF_SPEED] != None:
-        effect.set_speed_factor(config[CONF_SPEED])
+    effect.set_width_factor(config[CONF_WIDTH])
+    effect.set_color_weight_preset(config[CONF_WEIGHT])
+    effect.set_speed_factor(config[CONF_SPEED])
     effect.set_num_leds(config[CONF_NUM_LEDS])
     cg.add(effect)
     return effect
