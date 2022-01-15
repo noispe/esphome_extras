@@ -14,7 +14,7 @@ CONFIG_SCHEMA = cv.All(cv.Schema({}))
     BorealisLightEffect,
     "BOREALIS",
     {
-        CONF_NUM_LEDS: cv.positive_int(1),
+        cv.Required(CONF_NUM_LEDS): cv.positive_int(1),
         cv.Optional(CONF_WIDTH): cv.positive_int(1),
         cv.Optional(CONF_WEIGHT): cv.positive_int(1),
         cv.Optional(CONF_SPEED): cv.positive_int(1),
