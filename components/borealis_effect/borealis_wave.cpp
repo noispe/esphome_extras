@@ -28,7 +28,7 @@ BorealisWave::BorealisWave(uint8_t num_leds, uint8_t width_factor, uint8_t color
       wave_width_factor_(width_factor),
       wave_color_weight_preset_(color_weight_preset),
       wave_speed_factor_(speed_factor) {
-  width_ = random_float_(num_leds_ / 10, num_leds_ / wave_width_factor_);
+  width_ = random_float_(num_leds_ / 10.0f, num_leds_ / wave_width_factor_);
   center_ = random_float_(25, 76) / 100.0f * num_leds_;
   basecolor_ = get_weighted_color_(wave_color_weight_preset_);
   speed_ = random_float_(10, 30) / 100.0f * wave_speed_factor_;
@@ -40,7 +40,8 @@ BorealisWave::BorealisWave(uint8_t num_leds, uint8_t width_factor, uint8_t color
 }
 
 optional<Color> BorealisWave::get_color_for_led(int index) const {
-  if (index < (center_ - width_ / 2) || index > (center_ + width_ / 2)) {
+  float half_width = width_ / 2.0f;
+  if (index < (center_ - half_width ) || index > (center_ + half_width)) {
     // Position out of range of this wave
     return optional<Color>{};
   } else {
@@ -48,16 +49,16 @@ optional<Color> BorealisWave::get_color_for_led(int index) const {
 
     // Offset of this led from center of wave
     // The further away from the center, the dimmer the LED
-    int offset = abs(index - center_);
-    float offset_factor = (float) offset / (width_ / 2.0f);
+    float offset = abs(index - center_);
+    float offset_factor = offset / half_width;
 
     // The age of the wave determines it brightness.
     // At half its maximum age it will be the brightest.
-    float age_factor = 1;
+    float age_factor = 1.0f;
     if ((float) age_ / ttl_ < 0.5) {
       age_factor = (float) age_ / (ttl_ / 2.0f);
     } else {
-      age_factor = (float) (ttl_ - age_) / ((float) ttl_ * 0.5f);
+      age_factor = (float) (ttl_ - age_) / (ttl_ * 0.5f);
     }
 
     // Calculate color based on above factors and basealpha value
@@ -112,7 +113,6 @@ uint8_t BorealisWave::get_weighted_color_(uint8_t weighting) {
     if (randomweight < colorweighting[weighting][i]) {
       return i;
     }
-
     randomweight -= colorweighting[weighting][i];
   }
   return 0;
