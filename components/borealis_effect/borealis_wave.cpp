@@ -73,13 +73,13 @@ bool BorealisWave::still_alive() const { return alive_; };
 // Function to get the color for a wave based on the weighting.
 // Paramter weighting: First index of colorweighting array. Basically what preset to choose.
 uint8_t BorealisWave::get_weighted_color_(uint8_t weighting) {
-  auto sumOfWeights = 0;
+  auto sum_of_weights = 0;
 
   for (auto i = 0; i < sizeof colorweighting[0]; i++) {
-    sumOfWeights += colorweighting[weighting][i];
+    sum_of_weights += colorweighting[weighting][i];
   }
 
-  auto randomweight = random_int_(0, sumOfWeights);
+  auto randomweight = random_int_(0, sum_of_weights);
 
   for (auto i = 0; i < sizeof colorweighting[0]; i++) {
     if (randomweight < colorweighting[weighting][i]) {
@@ -92,12 +92,38 @@ uint8_t BorealisWave::get_weighted_color_(uint8_t weighting) {
 }
 
 int BorealisWave::random_int_(int min, int max) {
-    int base =  random_double();
-    return min + base % (( max + 1 ) - min);
+  int base = random_double();
+  return min + base % ((max + 1) - min);
 }
 
 float BorealisWave::random_float_(float min, float max) {
-    float base =  random_float();
-    return min + base * ( max - min);
+  float base = random_float();
+  return min + base * (max - min);
+}
+
+void borealis::BorealisLightEffect::blank_all_leds_(light::AddressableLight &it) {
+  for (int led = it.size(); led-- > 0;) {
+    it[led].set(Color::BLACK);
+  }
+  it.schedule_show();
+}
+
+borealis::BorealisLightEffect::BorealisLightEffect(const std::string &name) : AddressableLightEffect(name) {}
+
+void borealis::BorealisLightEffect::start() {
+  wave_ = std::make_shared<BorealisWave>(num_leds_, width_factor_, color_weight_preset_, speed_factor_);
+}
+
+void borealis::BorealisLightEffect::stop() { wave_.reset(); }
+
+void borealis::BorealisLightEffect::apply(light::AddressableLight &it, const Color &current_color) {
+  wave_->update();
+  for (int led = it.size(); led-- > 0;) {
+    it[led].set(wave_->get_color_for_led(led).value_or(Color::BLACK));
+  }
+  if (!wave_->still_alive()) {
+    wave_ = std::make_shared<BorealisWave>(num_leds_, width_factor_, color_weight_preset_, speed_factor_);
+  }
+  it.schedule_show();
 }
 }  // namespace esphome
