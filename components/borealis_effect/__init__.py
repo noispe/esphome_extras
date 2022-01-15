@@ -15,7 +15,7 @@ CONFIG_SCHEMA = cv.All(cv.Schema({}))
     "BOREALIS",
     {
         cv.Optional(CONF_WIDTH, default=1): cv.positive_int(1),
-        cv.Optional(CONF_WIDTH, default=1): cv.positive_int(1),
+        cv.Optional(CONF_WEIGHT, default=1): cv.positive_int(1),
         cv.Optional(CONF_NUM_LEDS, default=1): cv.positive_int(1),
         cv.Optional(CONF_SPEED, default=3): cv.positive_int(1),
     },
