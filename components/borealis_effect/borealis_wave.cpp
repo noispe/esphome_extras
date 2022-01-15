@@ -2,7 +2,7 @@
 #include "esphome/core/log.h"
 
 namespace esphome {
- static const char *VTAG = "BorealisLightEffect";
+static const char *VTAG = "BorealisLightEffect";
 
 // List of colors allowed for waves
 // The first dimension of this array must match the second dimension of the colorwighting array
@@ -32,7 +32,11 @@ BorealisWave::BorealisWave(uint8_t num_leds, uint8_t width_factor, uint8_t color
   center_ = random_float_(0, 101) / 100.0f * num_leds_;
   basecolor_ = get_weighted_color_(wave_color_weight_preset_);
   speed_ = random_float_(10, 30) / 100.0f * wave_speed_factor_;
-  ESP_LOGD(VTAG,"width_: %f, center_: %f, basecolor_: %x, speed_: %f", width_, center_,basecolor_,speed_);
+  basealpha_ = random_float_(75, 101) / 100.0f;
+  ttl_ = random_int_(500, 1501);
+  going_left_ = random_int_(0, 4) > 2;
+
+  ESP_LOGD(VTAG, "width_: %f, center_: %f, basecolor_: %x, speed_: %f", width_, center_, basecolor_, speed_);
 }
 
 optional<Color> BorealisWave::get_color_for_led(int index) const {
