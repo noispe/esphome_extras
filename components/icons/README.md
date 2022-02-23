@@ -5,7 +5,7 @@ A shortcut to include icon fonts into your esphome UI.
 External Resources:
 
 1. ttf files for the icon font.
-2. metadata for mapping string names to unicode code point.
+2. metadata for mapping string names to unicode code point.  The tool `buildtables.py` is provided to create it.
 
 
 Icons then can be used by including the component.
