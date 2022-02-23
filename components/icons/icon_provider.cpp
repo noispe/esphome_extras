@@ -5,31 +5,32 @@ namespace esphome {
 namespace icon_provider {
 static const char *TAG = "icon_provider";
 
-IconProvider::IconProvider(display::Font *font, const std::unordered_map<std::string, const char *> lut)
-    : Component(), lut_(lut), font_(font){}
+IconProvider::IconProvider(std::initializer_list<Icon> lut)
+    : Component()
+    {
+      for(auto icon : lut) {
+        lut_.emplace(icon.name, display::Image(icon.data, icon.width, icon.height, display::ImageType::IMAGE_TYPE_BINARY));
+      }
+    }
 
-float IconProvider::get_setup_priority() const { return setup_priority::DATA; }
+float IconProvider::get_setup_priority() const { return setup_priority::LATE; }
 
 void IconProvider::dump_config() {
   ESP_LOGCONFIG(TAG, "Configuration:");
   ESP_LOGCONFIG(TAG, "   %d icons provided:", lut_.size());
-  for(const auto &itm : lut_) {
-    ESP_LOGCONFIG(TAG, "   '%s'", itm.first.c_str());
+  for(auto itm = lut_.begin(); itm != lut_.end(); itm++) {
+    ESP_LOGCONFIG(TAG, "   '%s' %dx%d", itm->first.c_str(), itm->second.get_width(), itm->second.get_height());
   }
 }
 
-display::Font *IconProvider::get_font() const { return font_; }
-
-const char *IconProvider::get_icon(const std::string &name) const {
+display::Image *IconProvider::get_icon(const std::string &name) {
   auto needle = lut_.find(name);
   if (needle != lut_.end()) {
-    return needle->second;
+    return &needle->second; // fix in esphome
   }
   ESP_LOGE(TAG, "Icon '%s' was not found",name.c_str());
-for(const auto &itm : lut_) {
-    ESP_LOGE(TAG, "  got '%s'", itm.first.c_str());
-  }
-  return empty;
+
+  return &empty_;
 }
 }  // namespace icon_provider
 }  // namespace esphome
