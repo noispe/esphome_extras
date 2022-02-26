@@ -4,18 +4,27 @@ A shortcut to include icon fonts into your esphome UI.
 
 External Resources:
 
-1. ttf files for the icon font.
-2. metadata for mapping string names to unicode code point.  The tool `buildtables.py` is provided to create it.
+1. TTF files for the icon font.
+2. Metadata file for mapping string names to unicode code point.  The tool `buildtables.py` is provided to create it.  It needs python pillow installed and is run as follows:
 
+```shell
+$ buildtables.py <input.ttf> <output.json>
+```
 
-Icons then can be used by including the component.
+Icons then can be used by including the `icons` component.
 
-- id: identifier for the icon provider.  Multiples can be used.
-- font_file: the filename of the `.ttf` file that contains the icons.
-- metadata_file: the `.json` file containing the mapping from the human readable name to the unicode code point.
-- size: the size for the icons
-- prefix: an optional prefix for use with home assistant icons `mdi:icon-name`
-- icons: a list of icons that should be included in the firmware.
+- **id**: (Required) The identifier for the icon provider.  Multiples can be used.
+- **font_file**: (Required) The filename of the `.ttf` file that contains the icons.
+- **metadata_file**: (Required) The `.json` file containing the mapping from the human readable name to the unicode code point.
+- **size**: (Required) The size for the icons
+- **prefix**: (Optional) A prefix for use with home assistant icons `mdi:icon-name`
+- **icons**: A list of icons that should be included in the firmware.
+
+To use the icon with the `esphome::display::DisplayBuffer` call the following function from the display lambda:
+
+```cpp
+display::Image *IconProvider::get_icon(const std::string &name)
+```
 
 ```yaml
 icons:
@@ -25,33 +34,11 @@ icons:
     size: 24
     prefix: mdi
     icons:
-      - calendar-blank
       - gift
-      - gift-open
-      - calendar-star
-      - cellphone
-      - cellphone-off
-      - television
-      - television-off
-```
 
-To get the font for use with the `esphome::display::DisplayBuffer`:
-
-```cpp
-id(icon_id)->get_font()
-```
-To get the charicter used to display the font use:
-```cpp
-id(icon_id)->get_icon("iconname")
-```
-
-```yaml
-pages:
-  - id: info_page
+display:
+  - platform: ...
     lambda: |-
         it.fill(COLOR_ON);
-        it.print(10,20,id(icons_small)->get_font(), COLOR_OFF,  id(icons_small)->get_icon(id(tv_time_icon).state));
-        it.printf(75,10,id(text_normal), COLOR_OFF, "%d minutes of TV time", (int)id(tv_time).state);
-        it.print(10,85 + 5,id(icons_small)->get_font(), COLOR_OFF,  id(icons_small)->get_icon(id(tablet_time_icon).state));
-        it.printf(75,85,id(text_normal), COLOR_OFF, "%d minutes of tablet time", (int)id(tablet_time).state);
+        it.image(0, 0, id(icons_small)->get_icon());
 ```

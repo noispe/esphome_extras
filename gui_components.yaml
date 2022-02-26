@@ -1,0 +1,109 @@
+esphome:
+  name: guitest
+  platform: ESP32
+  board: esp-wrover-kit
+external_components:
+  - source: components
+
+wifi:
+  networks:
+    - ssid: "MySSID"
+      password: "password1"
+
+font:
+  - file: "3rdparty/tiny.ttf"
+    id: text_normal
+
+icons:
+  - font_file: "3rdparty/icomoon.ttf"
+    metadata_file: "3rdparty/icomoon.json"
+    size: 128
+    icons:
+      - uniE905
+    id: icon_1
+
+image:
+  - file: 3rdparty/sample.jpg
+    id: image_1
+
+ui_components:
+  id: gui_1
+
+imagebox:
+  - id: imagebox_1
+    image: image_1
+    x: 3
+    y: 12
+    renderer: gui_1
+
+  - id: imagebox_2
+    image: !lambda |
+      return id(image_1);
+    x: 3
+    y: 12
+    renderer: gui_1
+
+textbox:
+  - id: textbox_1
+    x: 3
+    y: 12
+    text: !lambda |
+      return "this is a test";
+    renderer: gui_1
+    font: text_normal
+  - id: textbox_2
+    x: 3
+    y: 12
+    text: this is a test;
+    renderer: gui_1
+    font: text_normal
+  - id: textbox_3
+    x: 3
+    y: 12
+    text_sensor: version_string
+    renderer: gui_1
+    font: text_normal
+
+template_box:
+  - id: template_box_1
+    x: 3
+    y: 12
+    renderer: gui_1
+    lambda: it.filled_rectangle(x,y,width,height,bg_color);
+
+shapebox:
+  - id: line_1
+    x: 3
+    y: 12
+    width: 10
+    renderer: gui_1
+    type: LINE
+  - id: circle_1
+    x: 3
+    y: 12
+    width: 10
+    height: 15
+    renderer: gui_1
+    type: LINE
+
+text_sensor:
+  - platform: wifi_info
+    scan_results:
+      name: "Scan Results"
+      id: scan_results
+  - platform: version
+    name: "ESPHome Version No Timestamp"
+    id: version_string
+    hide_timestamp: True
+
+i2c:
+  sda: 26
+  scl: 32
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: 27
+    address: 0x3C
+    lambda: |-
+      id(gui_1)->draw(it);

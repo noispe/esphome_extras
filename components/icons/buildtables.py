@@ -14,7 +14,8 @@ _PUA_CODEPOINTS = [
 
 
 def _is_pua(codepoint):
-  return any(r for r in _PUA_CODEPOINTS if codepoint in r)
+    return any(r for r in _PUA_CODEPOINTS if codepoint in r)
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
@@ -24,6 +25,6 @@ if __name__ == '__main__':
     ttf_file = sys.argv[1]
     out_file = sys.argv[2]
     with TTFont(ttf_file) as ttfont:
-        rev_cmap = {v:k for k,v in itertools.chain.from_iterable([t.cmap.items() for t in ttfont['cmap'].tables if t.isUnicode()]) if _is_pua(k)}
+        rev_cmap = {v: k for k, v in itertools.chain.from_iterable([t.cmap.items() for t in ttfont['cmap'].tables if t.isUnicode()]) if _is_pua(k)}
         with open(out_file, 'w') as outfile:
             json.dump(rev_cmap, outfile, indent=4, sort_keys=True)
