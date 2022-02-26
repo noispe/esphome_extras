@@ -2,7 +2,7 @@ import functools
 
 from esphome import core
 from esphome.components import display, image
-from esphome.components.font import Font, Glyph, GlyphData, CONF_RAW_GLYPH_ID, validate_truetype_file, validate_pillow_installed
+from esphome.components.font import validate_truetype_file, validate_pillow_installed
 import esphome.config_validation as cv
 import esphome.codegen as cg
 import esphome.cpp_generator as ccpg
@@ -11,8 +11,9 @@ from esphome.core import CORE, HexInt
 import json
 import math
 
-DEPENDENCIES = ["font"]
+DEPENDENCIES = ["display"]
 MULTI_CONF = True
+
 
 def validate_icons(value):
     if isinstance(value, list):
@@ -20,9 +21,9 @@ def validate_icons(value):
     value = cv.Schema([cv.string])(list(value))
     return value
 
+
 CONF_FONT_FILE = "font_file"
 CONF_METADATA_FILE = "metadata_file"
-CONF_ICON_LUT_ID = "icon_lookup_lut"
 CONF_ICONS = "icons"
 CONF_FONT_ID = "font_id"
 CONF_PREFIX = "prefix"
@@ -49,6 +50,7 @@ ICON_PROVIDER_SCHEMA = cv.Schema(
 
 CONFIG_SCHEMA = cv.All(validate_pillow_installed, ICON_PROVIDER_SCHEMA)
 
+
 class PlainStaticConstAssignmentExpression(ccpg.AssignmentExpression):
     __slots__ = ()
 
@@ -58,6 +60,7 @@ class PlainStaticConstAssignmentExpression(ccpg.AssignmentExpression):
     def __str__(self):
         return f"static const {self.type} {self.name} = {self.rhs}"
 
+
 def static_const_obj(id_, rhs) -> "MockObj":
     rhs = cg.safe_exp(rhs)
     obj = cg.MockObj(id_, ".")
@@ -66,29 +69,35 @@ def static_const_obj(id_, rhs) -> "MockObj":
     CORE.register_variable(id_, obj)
     return obj
 
+
 def maybe_prefix(base, prefix):
     if prefix == '':
         return base
     return prefix + ':' + base
 
-def make_square(pil_img, size):
+
+def make_square(mask, size):
     from PIL import Image
-    img_w, img_h = pil_img.size
-    x1 = int(math.floor((size - img_w) / 2))
-    y1 = int(math.floor((size - img_h) / 2))
-    background = Image.new(pil_img.mode, (size, size), (0))
-    background.paste(pil_img, (x1, y1, x1 + img_w, y1 + img_h))
-    return background
+
+    width, height = mask.size
+    square_mask = mask
+    if width > height:
+        square_mask = Image.new(mask.mode, (size, size), (0))
+        top_left = (0, (width - height) // 2)
+        square_mask.paste(mask, (0, (width - height) // 2, width, height + (width - height) // 2))
+    else:
+        square_mask = Image.new(mask.mode, (size, size), (0))
+        square_mask.paste(mask, ((height - width) // 2, 0, width + ((height - width) // 2), height))
+    return square_mask
+
 
 async def to_code(config):
     from PIL import ImageFont
 
     path = CORE.relative_config_path(config[CONF_FONT_FILE])
     metadata_path = CORE.relative_config_path(config[CONF_METADATA_FILE])
-    size = config[CONF_SIZE]
-    point = int(size * 96/72)
     try:
-        font = ImageFont.truetype(path, point)
+        font = ImageFont.truetype(path, int(config[CONF_SIZE]))
         with open(metadata_path) as fp:
             metadata = json.load(fp)
 
@@ -96,9 +105,9 @@ async def to_code(config):
         raise core.EsphomeError(f"Could not load truetype file {path}: {e}")
 
     glyphs = {}
-    for icon,codepoint in metadata.items():
+    for icon, codepoint in metadata.items():
         cp = chr(int(codepoint))
-        glyphs[maybe_prefix(icon,config[CONF_PREFIX])] = cp
+        glyphs[maybe_prefix(icon, config[CONF_PREFIX])] = cp
 
     glyph_args = {}
     used_glyphs = []
@@ -111,20 +120,20 @@ async def to_code(config):
             glyph = glyphs[icon]
         except Exception as e:
             raise core.EsphomeError(f"Glyph for {icon} was not found: {e} in {glyphs.keys()}")
-        if glyph in used_glyphs: #already have it
+        if glyph in used_glyphs:  # already have it
             continue
-        mask = font.getmask(glyph, mode="1")
-        mask = make_square(mask,size)
+        mask = font.getmask(glyph, "1")
+        mask = make_square(mask, int(config[CONF_SIZE]))
         width, height = mask.size
         width8 = ((width + 7) // 8) * 8
         glyph_data = [0 for _ in range(height * width8 // 8)]
         for y in range(height):
             for x in range(width):
-                if not mask.getpixel((x, y)):
+                if mask.getpixel((x, y)) == (0):
                     continue
                 pos = x + y * width8
                 glyph_data[pos // 8] |= 0x80 >> (pos % 8)
-        glyph_args[icon] = (len(data),width, height)
+        glyph_args[icon] = (len(data), width, height)
         data += glyph_data
         used_glyphs.append(icon)
 

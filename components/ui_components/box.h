@@ -1,0 +1,137 @@
+#pragma once
+
+#include "esphome/components/display/display_buffer.h"
+#include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/core/color.h"
+#include <string>
+#include <functional>
+#include <vector>
+
+namespace esphome {
+namespace ui_components {
+class BaseBox {
+ public:
+  BaseBox() = default;
+  virtual ~BaseBox() = default;
+
+  virtual void draw(display::DisplayBuffer &disp) = 0;
+
+  void set_fg_color(const Color &fg_color) { fg_color_ = fg_color; }
+  void set_bg_color(const Color &bg_color) { bg_color_ = bg_color; }
+  void set_x(int x) { x_ = x; }
+  void set_y(int y) { y_ = y; }
+  void set_width(int width) { width_ = width; }
+  void set_height(int height) { height_ = height; }
+  void set_alignment(const display::TextAlign &alignment) { alignment_ = alignment; }
+  void set_border(bool border) { border_ = border; }
+  void position_inside(int *content_x, int *content_y, int content_width, int content_height);
+
+ protected:
+  int x() const { return border_ ? x_ + 1 : x_; }
+  int y() const { return border_ ? y_ + 1 : y_; };
+  int width() const { return border_ ? width_ - 2 : width_; }
+  int height() const { return border_ ? height_ - 2 : height_; };
+  Color fg_color_ = display::COLOR_ON;
+  Color bg_color_ = display::COLOR_OFF;
+  int x_ = 0;
+  int y_ = 0;
+  int width_ = 0;
+  int height_ = 0;
+  bool border_ = false;
+  display::TextAlign alignment_ = display::TextAlign::TOP_LEFT;
+};
+
+class UIComponents {
+ public:
+  UIComponents() = default;
+  void add_component(BaseBox *box);
+
+  void draw(display::DisplayBuffer &disp) const;
+
+ protected:
+  std::vector<BaseBox *> content_{};
+};
+
+}  // namespace ui_components
+
+namespace textbox {
+class TextBox : public ui_components::BaseBox {
+ public:
+  enum class ContentType { SENSOR, STATIC, DYNAMIC };
+  TextBox() : ui_components::BaseBox() { ; }
+  void draw(display::DisplayBuffer &disp) override;
+  void set_font(display::Font *font) { font_ = font; }
+  void set_content(text_sensor::TextSensor *content) {
+    type_ = ContentType::SENSOR;
+    content_ = content;
+  }
+  void set_content(const std::string &static_content) {
+    type_ = ContentType::STATIC;
+    static_content_ = static_content;
+  }
+  void set_content(const std::function<std::string()> &dynamic_content) {
+    type_ = ContentType::DYNAMIC;
+    dynamic_content_ = dynamic_content;
+  }
+
+ private:
+  std::string resolve_string();
+  display::Font *font_ = nullptr;
+  text_sensor::TextSensor *content_ = nullptr;
+  std::string static_content_{};
+  std::function<std::string()> dynamic_content_{};
+  ContentType type_ = ContentType::STATIC;
+};
+}  // namespace textbox
+
+namespace imagebox {
+class ImageBox : public ui_components::BaseBox {
+ public:
+  ImageBox() : ui_components::BaseBox() { ; }
+  void draw(display::DisplayBuffer &disp) override;
+  void set_image(display::Image *content) { content_ = content; }
+  void set_image(std::function<display::Image *()> dynamic_content) { dynamic_content_ = dynamic_content; }
+
+ private:
+  display::Image *content_ = nullptr;
+  std::function<display::Image *()> dynamic_content_{};
+};
+}  // namespace imagebox
+
+namespace template_box {
+class TemplateBox : public ui_components::BaseBox {
+ public:
+  using drawing_template_t =
+      std::function<void(display::DisplayBuffer &, int, int, int, int, display::TextAlign, Color, Color)>;
+  TemplateBox() : ui_components::BaseBox() { ; }
+  void draw(display::DisplayBuffer &disp) override;
+  void set_drawer(drawing_template_t drawer) { drawer_ = drawer; }
+
+ private:
+  drawing_template_t drawer_;
+};
+
+}  // namespace template_box
+
+namespace shapebox {
+class ShapeBox : public ui_components::BaseBox {
+ public:
+  enum class ShapeType {
+    CIRCLE,
+    FILLED_CIRCLE,
+    RECTANGLE,
+    FILLED_RECTANGLE,
+    LINE,
+  };
+
+  ShapeBox() : ui_components::BaseBox() { ; }
+  void draw(display::DisplayBuffer &disp) override;
+  void set_shape_type(ShapeType shapetype) { shapetype_ = shapetype; }
+
+ private:
+  ShapeType shapetype_;
+};
+
+}  // namespace shapebox
+
+}  // namespace esphome

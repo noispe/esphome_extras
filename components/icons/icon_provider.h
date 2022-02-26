@@ -10,15 +10,14 @@ namespace esphome {
 namespace icon_provider {
 
 struct Icon {
-    std::string name;
-    size_t width;
-    size_t height;
-    const uint8_t* data;
-  };
+  std::string name;
+  size_t width;
+  size_t height;
+  const uint8_t *data;
+};
 
 class IconProvider : public Component {
  public:
-
   IconProvider(std::initializer_list<Icon> lut);
   display::Image *get_icon(const std::string &name);
 
@@ -28,7 +27,7 @@ class IconProvider : public Component {
  private:
   std::map<std::string, display::Image> lut_;
   const uint8_t empty_data_[10] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-  display::Image empty_ {empty_data_,1,1, esphome::display::ImageType::IMAGE_TYPE_BINARY};
+  display::Image empty_{empty_data_, 1, 1, esphome::display::ImageType::IMAGE_TYPE_BINARY};
 };
 
 }  // namespace icon_provider
