@@ -37,7 +37,7 @@ Icon = icon_provider_ns.struct(
 
 ICON_PROVIDER_SCHEMA = cv.Schema(
     {
-        cv.Required(CONF_ID): cv.declare_id(IconProvider),
+        cv.GenerateID(): cv.declare_id(IconProvider),
         cv.Required(CONF_FONT_FILE): validate_truetype_file,
         cv.Required(CONF_METADATA_FILE): cv.file_,
         cv.Required(CONF_ICONS): validate_icons,
@@ -86,7 +86,7 @@ async def to_code(config):
     path = CORE.relative_config_path(config[CONF_FONT_FILE])
     metadata_path = CORE.relative_config_path(config[CONF_METADATA_FILE])
     size = config[CONF_SIZE]
-    point = int(size * 0.75)
+    point = int(size * 96/72)
     try:
         font = ImageFont.truetype(path, point)
         with open(metadata_path) as fp:
