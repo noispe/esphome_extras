@@ -28,63 +28,54 @@ image:
 
 ui_components:
   id: gui_1
-
-imagebox:
-  - id: imagebox_1
-    image: image_1
-    x: 3
-    y: 12
-    renderer: gui_1
-
-  - id: imagebox_2
-    image: !lambda |
-      return id(image_1);
-    x: 3
-    y: 12
-    renderer: gui_1
-
-textbox:
-  - id: textbox_1
-    x: 3
-    y: 12
-    text: !lambda |
-      return "this is a test";
-    renderer: gui_1
-    font: text_normal
-  - id: textbox_2
-    x: 3
-    y: 12
-    text: this is a test;
-    renderer: gui_1
-    font: text_normal
-  - id: textbox_3
-    x: 3
-    y: 12
-    text_sensor: version_string
-    renderer: gui_1
-    font: text_normal
-
-template_box:
-  - id: template_box_1
-    x: 3
-    y: 12
-    renderer: gui_1
-    lambda: it.filled_rectangle(x,y,width,height,bg_color);
-
-shapebox:
-  - id: line_1
-    x: 3
-    y: 12
-    width: 10
-    renderer: gui_1
-    type: LINE
-  - id: circle_1
-    x: 3
-    y: 12
-    width: 10
-    height: 15
-    renderer: gui_1
-    type: LINE
+  elements:
+    - image:
+        image: image_1
+        x: 3
+        y: 12
+    - image:
+        image: !lambda |
+          return id(image_1);
+        x: 3
+        y: 12
+    - image:
+        text_sensor:
+          sensor: version_string
+          icons: icon_1
+        x: 3
+        y: 12
+    - text:
+        x: 3
+        y: 12
+        text: !lambda |
+          return "this is a test";
+        font: text_normal
+    - text:
+        x: 3
+        y: 12
+        text: this is a test;
+        font: text_normal
+    - text:
+        x: 3
+        y: 12
+        text_sensor: version_string
+        default: "No data"
+        font: text_normal
+    - template:
+        x: 3
+        y: 12
+        lambda: it.filled_rectangle(x,y,width,height,bg_color);
+    - shape:
+        x: 3
+        y: 12
+        width: 10
+        shape: LINE
+    - shape:
+        x: 3
+        y: 12
+        width: 10
+        height: 15
+        shape: LINE
 
 text_sensor:
   - platform: wifi_info
