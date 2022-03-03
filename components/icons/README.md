@@ -1,8 +1,8 @@
 # Icon Font image provider
 
-A shortcut to include icon fonts into your esphome UI.
+A component that allows easier access to "icon fonts" by name instead of the code point.
 
-External Resources:
+***External Resources:**
 
 1. TTF files for the icon font.
 2. Metadata file for mapping string names to unicode code point.  The tool `buildtables.py` is provided to create it.  It needs python pillow installed and is run as follows:
@@ -11,7 +11,7 @@ External Resources:
 $ buildtables.py <input.ttf> <output.json>
 ```
 
-Icons then can be used by including the `icons` component.
+Icons then can be used by including the `icons` component with the following properties:
 
 - **id**: (Required) The identifier for the icon provider.  Multiples can be used.
 - **font_file**: (Required) The filename of the `.ttf` file that contains the icons.
@@ -25,6 +25,8 @@ To use the icon with the `esphome::display::DisplayBuffer` call the following fu
 ```cpp
 display::Image *IconProvider::get_icon(const std::string &name)
 ```
+
+Example:
 
 ```yaml
 icons:

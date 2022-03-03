@@ -1,11 +1,14 @@
-#include "box.h"
+#include "elements.h"
 #include "esphome/core/log.h"
+#include <sstream>
+#include <iomanip>
 
 namespace esphome {
 
 static const char *const TAG = "ui_components";
 
-void ui_components::BaseBox::position_inside(int *content_x, int *content_y, int content_width, int content_height) {
+void ui_components::BaseElement::position_inside(int *content_x, int *content_y, int content_width,
+                                                 int content_height) {
   auto x_align = display::TextAlign(int(alignment_) & 0x18);
   auto y_align = display::TextAlign(int(alignment_) & 0x07);
   if (width() > 0) {
@@ -42,12 +45,12 @@ void ui_components::BaseBox::position_inside(int *content_x, int *content_y, int
   }
 }
 
-void textbox::TextBox::draw(display::DisplayBuffer &disp) {
+void ui_components::TextElement::draw(display::DisplayBuffer &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, fg_color_);
     disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
   }
-  const std::string buffer = resolve_string();
+  const std::string buffer = dynamic_content_();
   if (buffer.empty()) {
     return;
   }
@@ -65,12 +68,12 @@ void textbox::TextBox::draw(display::DisplayBuffer &disp) {
   disp.print(text_x, text_y, font_, fg_color_, display::TextAlign::TOP_LEFT, buffer.c_str());
 }
 
-void imagebox::ImageBox::draw(display::DisplayBuffer &disp) {
+void ui_components::ImageElement::draw(display::DisplayBuffer &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, fg_color_);
   }
   disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
-  display::Image *img = content_ == nullptr ? dynamic_content_() : content_;
+  display::Image *img = dynamic_content_();
   if (img == nullptr) {
     return;
   }
@@ -84,29 +87,12 @@ void imagebox::ImageBox::draw(display::DisplayBuffer &disp) {
   disp.image(image_x, image_y, img, fg_color_, bg_color_);
 }
 
-void template_box::TemplateBox::draw(display::DisplayBuffer &disp) {
+void ui_components::TemplateElement::draw(display::DisplayBuffer &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, fg_color_);
   }
   disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
   drawer_(disp, x(), y(), width(), height(), alignment_, fg_color_, bg_color_);
-}
-
-std::string textbox::TextBox::resolve_string() {
-  switch (type_) {
-    case ContentType::SENSOR:
-      if (content_->has_state()) {
-        return content_->state;
-      }
-      break;
-    case ContentType::DYNAMIC:
-      return dynamic_content_();
-      break;
-    default:
-      return static_content_;
-      break;
-  }
-  return static_content_;
 }
 
 void ui_components::UIComponents::draw(display::DisplayBuffer &disp) const {
@@ -115,9 +101,7 @@ void ui_components::UIComponents::draw(display::DisplayBuffer &disp) const {
   }
 }
 
-void ui_components::UIComponents::add_component(BaseBox *box) { content_.push_back(box); }
-
-void shapebox::ShapeBox::draw(display::DisplayBuffer &disp) {
+void ui_components::ShapeElement::draw(display::DisplayBuffer &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, fg_color_);
   }
@@ -149,5 +133,48 @@ void shapebox::ShapeBox::draw(display::DisplayBuffer &disp) {
       break;
   }
 }
+
+#ifdef USE_SENSOR
+void ui_components::TextElement::set_content(sensor::Sensor *content) {
+  set_content([this, content]() {
+    if (content->has_state()) {
+      std::ostringstream ss;
+      ss << std::setw(content->get_accuracy_decimals()) << std::fixed << content->get_state()
+         << content->get_unit_of_measurement();
+      return ss.str();
+    }
+    return this->default_;
+  });
+}
+#endif
+#ifdef USE_TEXT_SENSOR
+void ui_components::TextElement::set_content(text_sensor::TextSensor *content) {
+  set_content([this, content]() { return content->has_state() ? content->get_state() : this->default_; });
+}
+#endif
+#ifdef USE_BINARY_SENSOR
+void ui_components::TextElement::set_content(binary_sensor::BinarySensor *content) {
+  set_content([this, content]() {
+    if (content->has_state()) {
+      return content->state ? std::string{"ON"} : std::string{"OFF"};
+    }
+    return this->default_;
+  });
+}
+#endif
+
+void ui_components::TextElement::set_content(const std::string &content) {
+  set_content([content]() { return content; });
+}
+#if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
+void ui_components::ImageElement::set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon) {
+  set_image([content, icon]() -> display::Image* {
+    if (content->has_state()) {
+      return icon->get_icon(content->get_state());
+    }
+    return nullptr;
+  });
+}
+#endif
 
 }  // namespace esphome

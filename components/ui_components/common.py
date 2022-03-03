@@ -2,18 +2,20 @@ from esphome import core
 from esphome.components import display, color
 import esphome.config_validation as cv
 import esphome.codegen as cg
+from esphome.util import Registry
 from esphome.const import CONF_ID, CONF_WIDTH, CONF_HEIGHT, CONF_COLOR, CONF_BORDER
-from . import UIComponents, ui_components_ns
 
 CONF_X = "x"
 CONF_Y = "y"
 CONF_ALIGNMENT = "alignment"
 CONF_BACKGROUND = "background"
 CONF_RENDER = "renderer"
+CONF_ELEMENTS = "elements"
 
-BaseBox = ui_components_ns.class_("BaseBox")
-BaseBoxPtr = BaseBox.operator("ptr")
-BaseBoxConstPtr = BaseBox.operator("const_ptr")
+ui_components_ns = cg.esphome_ns.namespace("ui_components")
+BaseElement = ui_components_ns.class_("BaseElement")
+BaseElementPtr = BaseElement.operator("ptr")
+BaseElementConstPtr = BaseElement.operator("const_ptr")
 TextAlign = display.display_ns.enum("TextAlign", is_class=True)
 ALIGNMENTS = {
     "TOP": TextAlign.TOP,
@@ -36,9 +38,8 @@ ALIGNMENTS = {
     "BOTTOM_CENTER": TextAlign.BOTTOM_CENTER,
     "BOTTOM_RIGHT": TextAlign.BOTTOM_RIGHT,
 }
-BOX_SCHEMA = cv.Schema(
+ELEMENT_SCHEMA = cv.Schema(
     {
-        cv.Required(CONF_RENDER): cv.use_id(UIComponents),
         cv.Required(CONF_X): cv.int_range(min=0),
         cv.Required(CONF_Y): cv.int_range(min=0),
         cv.Optional(CONF_WIDTH): cv.int_range(min=1),
@@ -52,10 +53,25 @@ BOX_SCHEMA = cv.Schema(
     }
 )
 
+ELEMENTS_REGISTRY = Registry()
+
+
+def register_element(name, type, schema):
+    schema = ELEMENT_SCHEMA.extend(schema).extend({cv.GenerateID(): cv.declare_id(type)})
+    return ELEMENTS_REGISTRY.register(name, type, schema)
+
+
+validate_elements = cv.validate_registry_entry("elements", ELEMENTS_REGISTRY)
+
+
+async def generate_elements(config):
+    elements = await cg.build_registry_list(
+        ELEMENTS_REGISTRY, config[CONF_ELEMENTS]
+    )
+    return elements
+
 
 async def generate_common_code(var, config):
-    renderer = await cg.get_variable(config[CONF_RENDER])
-    cg.add(renderer.add_component(var))
     cg.add(var.set_x(config[CONF_X]))
     cg.add(var.set_y(config[CONF_Y]))
     cg.add(var.set_alignment(ALIGNMENTS[config[CONF_ALIGNMENT]]))
