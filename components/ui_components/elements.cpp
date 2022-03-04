@@ -168,7 +168,7 @@ void ui_components::TextElement::set_content(const std::string &content) {
 }
 #if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
 void ui_components::ImageElement::set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon) {
-  set_image([content, icon]() -> display::Image* {
+  set_image([content, icon]() -> display::Image * {
     if (content->has_state()) {
       return icon->get_icon(content->get_state());
     }
@@ -176,5 +176,56 @@ void ui_components::ImageElement::set_image(text_sensor::TextSensor *content, ic
   });
 }
 #endif
+
+void ui_components::ButtonElement::set_button(binary_sensor::BinarySensor *button) {
+  button_ = button;
+  button_->add_on_state_callback([this](bool state) {
+    if (display_ != nullptr) {
+      //display_->update(); // need to update the display now
+    }
+  });
+}
+void ui_components::ButtonElement::set_touchscreen(touchscreen::Touchscreen *touchscreen) {
+  touchscreen->register_listener(this);
+}
+void ui_components::ButtonElement::set_override_text(const std::string &text) { override_text_ = text; };
+void ui_components::ButtonElement::touch(touchscreen::TouchPoint tp) {
+  if (tp.x < this->x()) {
+    return;
+  }
+  if (tp.x > this->x() + this->width()) {
+    return;
+  }
+  if (tp.y < this->y()) {
+    return;
+  }
+  if (tp.y > this->y() + this->height()) {
+    return;
+  }
+  button_->publish_state(true);
+}
+void ui_components::ButtonElement::release() { button_->publish_state(false); }
+void ui_components::ButtonElement::draw(display::DisplayBuffer &disp) {
+  auto fg = button_->state ? bg_color_ : fg_color_;
+  auto bg = button_->state ? fg_color_ : bg_color_;
+
+  if (border_) {
+    disp.rectangle(x_, y_, width_, height_, fg_color_);
+    disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
+  }
+
+  disp.filled_rectangle(x(), y(), width(), height(), bg);
+  std::string buffer = override_text_.empty() ? button_->get_name() : override_text_;
+  int text_x = x();
+  int text_y = y();
+  int text_width = 0;
+  int text_height = 0;
+  disp.get_text_bounds(x(), y(), buffer.c_str(), font_, display::TextAlign::TOP_LEFT, &text_y, &text_y, &text_width,
+                       &text_height);
+  position_inside(&text_x, &text_y, text_width, text_height);
+  disp.print(text_x, text_y, font_, fg, display::TextAlign::TOP_LEFT, buffer.c_str());
+}
+
+void ui_components::ButtonElement::set_display(display::DisplayBuffer *display) { display_ = display; }
 
 }  // namespace esphome
