@@ -14,6 +14,8 @@
 #include "esphome/components/icons/icon_provider.h"
 #endif
 
+#include "esphome/components/touchscreen/touchscreen.h"
+
 #include "esphome/core/component.h"
 #include "esphome/core/color.h"
 #include <string>
@@ -128,6 +130,27 @@ class ShapeElement : public BaseElement {
  private:
   ShapeType shapetype_;
 };
+
+class ButtonElement : public BaseElement, public touchscreen::TouchListener {
+ public:
+  void set_button(binary_sensor::BinarySensor *button);
+  void set_touchscreen(touchscreen::Touchscreen *touchscreen);
+  void set_display(display::DisplayBuffer *display);
+  void set_override_text(const std::string &text);
+  void set_font(display::Font *font) { font_ = font; }
+
+  void touch(touchscreen::TouchPoint tp) override;
+  void release() override;
+  void draw(display::DisplayBuffer &disp) override;
+
+ private:
+  std::string override_text_;
+  binary_sensor::BinarySensor *button_ = nullptr;
+  display::DisplayBuffer *display_ = nullptr;
+  display::Font *font_ = nullptr;
+
+};
+
 }  // namespace ui_components
 
 }  // namespace esphome
