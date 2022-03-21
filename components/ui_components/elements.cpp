@@ -46,6 +46,10 @@ void ui_components::BaseElement::position_inside(int *content_x, int *content_y,
 }
 
 void ui_components::TextElement::draw(display::DisplayBuffer &disp) {
+  if (!visible_) {
+    return;
+  }
+
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, fg_color_);
     disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
@@ -180,9 +184,7 @@ void ui_components::ImageElement::set_image(text_sensor::TextSensor *content, ic
 void ui_components::ButtonElement::set_button(binary_sensor::BinarySensor *button) {
   button_ = button;
   button_->add_on_state_callback([this](bool state) {
-    if (display_ != nullptr) {
-      //display_->update(); // need to update the display now
-    }
+
   });
 }
 void ui_components::ButtonElement::set_touchscreen(touchscreen::Touchscreen *touchscreen) {
@@ -190,6 +192,9 @@ void ui_components::ButtonElement::set_touchscreen(touchscreen::Touchscreen *tou
 }
 void ui_components::ButtonElement::set_override_text(const std::string &text) { override_text_ = text; };
 void ui_components::ButtonElement::touch(touchscreen::TouchPoint tp) {
+  if (!visible_) {
+    return;
+  }
   if (tp.x < this->x()) {
     return;
   }
@@ -205,7 +210,7 @@ void ui_components::ButtonElement::touch(touchscreen::TouchPoint tp) {
   button_->publish_state(true);
 }
 void ui_components::ButtonElement::release() { button_->publish_state(false); }
-void ui_components::ButtonElement::draw(display::DisplayBuffer &disp) {
+void ui_components::TextButtonElement::draw(display::DisplayBuffer &disp) {
   auto fg = button_->state ? bg_color_ : fg_color_;
   auto bg = button_->state ? fg_color_ : bg_color_;
 
@@ -226,6 +231,36 @@ void ui_components::ButtonElement::draw(display::DisplayBuffer &disp) {
   disp.print(text_x, text_y, font_, fg, display::TextAlign::TOP_LEFT, buffer.c_str());
 }
 
-void ui_components::ButtonElement::set_display(display::DisplayBuffer *display) { display_ = display; }
+#if defined(USE_ICON_PROVIDER)
+void ui_components::IconButtonElement::set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon) {
+  set_image([content, icon]() -> display::Image * {
+    if (content->has_state()) {
+      return icon->get_icon(content->get_state());
+    }
+    return nullptr;
+  });
+}
+#endif
 
+void ui_components::IconButtonElement::draw(display::DisplayBuffer &disp) {
+  auto fg = button_->state ? bg_color_ : fg_color_;
+  auto bg = button_->state ? fg_color_ : bg_color_;
+
+  if (border_) {
+    disp.rectangle(x_, y_, width_, height_, fg_color_);
+    disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
+  }
+
+  disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
+  display::Image *img = dynamic_content_();
+  if (img == nullptr) {
+    return;
+  }
+  int image_x = x();
+  int image_y = y();
+  int image_width = img->get_width();
+  int image_height = img->get_height();
+  position_inside(&image_x, &image_y, image_width, image_height);
+  disp.image(image_x, image_y, img, fg_color_, bg_color_);
+}
 }  // namespace esphome

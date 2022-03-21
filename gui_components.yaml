@@ -40,7 +40,7 @@ ui_components:
         y: 12
     - image:
         text_sensor:
-          sensor: version_string
+          sensor_id: version_string
           icons: icon_1
         x: 3
         y: 12

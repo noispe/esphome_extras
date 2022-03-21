@@ -18,13 +18,20 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/color.h"
+#include "esphome/core/helpers.h"
 #include <string>
 #include <functional>
 #include <vector>
 
+template<class... Args> struct Drawlist {
+  const std::tuple<Args...> items;
+  void draw(display::DisplayBuffer &buffer) const;
+};
+
 namespace esphome {
 namespace ui_components {
-class BaseElement {
+class UIComponents;
+class BaseElement : public Parented<UIComponents> {
  public:
   virtual ~BaseElement() = default;
 
@@ -38,6 +45,8 @@ class BaseElement {
   void set_height(int height) { height_ = height; }
   void set_alignment(const display::TextAlign &alignment) { alignment_ = alignment; }
   void set_border(bool border) { border_ = border; }
+  void set_visible(bool visible) { visible_ = visible; }
+  bool get_visible() { return visible_; }
 
  protected:
   void position_inside(int *content_x, int *content_y, int content_width, int content_height);
@@ -53,6 +62,7 @@ class BaseElement {
   int height_ = 0;
   bool border_ = false;
   display::TextAlign alignment_ = display::TextAlign::TOP_LEFT;
+  bool visible_ = true;
 };
 
 class UIComponents {
@@ -135,20 +145,39 @@ class ButtonElement : public BaseElement, public touchscreen::TouchListener {
  public:
   void set_button(binary_sensor::BinarySensor *button);
   void set_touchscreen(touchscreen::Touchscreen *touchscreen);
-  void set_display(display::DisplayBuffer *display);
-  void set_override_text(const std::string &text);
-  void set_font(display::Font *font) { font_ = font; }
-
   void touch(touchscreen::TouchPoint tp) override;
   void release() override;
+
+ protected:
+  binary_sensor::BinarySensor *button_ = nullptr;
+};
+
+class TextButtonElement : public ButtonElement {
+ public:
+  void set_override_text(const std::string &text);
+  void set_font(display::Font *font) { font_ = font; }
   void draw(display::DisplayBuffer &disp) override;
 
  private:
   std::string override_text_;
-  binary_sensor::BinarySensor *button_ = nullptr;
-  display::DisplayBuffer *display_ = nullptr;
   display::Font *font_ = nullptr;
+};
 
+class IconButtonElement : public ButtonElement {
+ public:
+  void set_icon();
+  void draw(display::DisplayBuffer &disp) override;
+  void set_image(display::Image *content) {
+    set_image([content]() { return content; });
+  }
+  void set_image(std::function<display::Image *()> dynamic_content) { dynamic_content_ = dynamic_content; }
+#if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
+  void set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon);
+#endif
+
+ private:
+  std::string override_text_;
+  std::function<display::Image *()> dynamic_content_{};
 };
 
 }  // namespace ui_components
