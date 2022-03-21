@@ -190,7 +190,7 @@ void ui_components::ButtonElement::set_button(binary_sensor::BinarySensor *butto
 void ui_components::ButtonElement::set_touchscreen(touchscreen::Touchscreen *touchscreen) {
   touchscreen->register_listener(this);
 }
-void ui_components::ButtonElement::set_override_text(const std::string &text) { override_text_ = text; };
+void ui_components::TextButtonElement::set_override_text(const std::string &text) { override_text_ = text; };
 void ui_components::ButtonElement::touch(touchscreen::TouchPoint tp) {
   if (!visible_) {
     return;
@@ -231,7 +231,7 @@ void ui_components::TextButtonElement::draw(display::DisplayBuffer &disp) {
   disp.print(text_x, text_y, font_, fg, display::TextAlign::TOP_LEFT, buffer.c_str());
 }
 
-#if defined(USE_ICON_PROVIDER)
+#if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
 void ui_components::IconButtonElement::set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon) {
   set_image([content, icon]() -> display::Image * {
     if (content->has_state()) {

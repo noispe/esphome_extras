@@ -23,10 +23,6 @@
 #include <functional>
 #include <vector>
 
-template<class... Args> struct Drawlist {
-  const std::tuple<Args...> items;
-  void draw(display::DisplayBuffer &buffer) const;
-};
 
 namespace esphome {
 namespace ui_components {

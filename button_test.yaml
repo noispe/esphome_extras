@@ -29,7 +29,7 @@ image:
 ui_components:
   id: gui_1
   elements:
-    - button:
+    - text_button:
         sensor_id: ok_button
         font: text_normal
         touchscreen_id: touch

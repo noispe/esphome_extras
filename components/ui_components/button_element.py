@@ -19,7 +19,6 @@ CONF_TEXT_SENSOR = "text_sensor"
 BUTTON_SCHEMA = ELEMENT_SCHEMA.extend({
     cv.Required(touchscreen.CONF_TOUCHSCREEN_ID): cv.use_id(touchscreen.Touchscreen),
     cv.Required(CONF_SENSOR): cv.use_id(binary_sensor.BinarySensor),
-    cv.GenerateID(CONF_DISPLAY): cv.use_id(display.DisplayBuffer),
 })
 
 
@@ -29,10 +28,6 @@ async def generate_common_button_code(button, config):
 
     sensor = await cg.get_variable(config[CONF_SENSOR])
     cg.add(button.set_button(sensor))
-
-    disp = await cg.get_variable(config[CONF_DISPLAY])
-    cg.add(button.set_display(disp))
-
 
 @register_element("text_button", TextButtonElement, BUTTON_SCHEMA.extend({
     cv.Required(CONF_FONT): cv.use_id(font.Font),
