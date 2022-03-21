@@ -1,9 +1,10 @@
 from esphome import core
-from esphome.components import display, color
+from esphome.components import display, color, text_sensor
 import esphome.config_validation as cv
 import esphome.codegen as cg
 from esphome.util import Registry
 from esphome.const import CONF_ID, CONF_WIDTH, CONF_HEIGHT, CONF_COLOR, CONF_BORDER
+from .. import icons
 
 CONF_X = "x"
 CONF_Y = "y"
@@ -11,6 +12,7 @@ CONF_ALIGNMENT = "alignment"
 CONF_BACKGROUND = "background"
 CONF_RENDER = "renderer"
 CONF_ELEMENTS = "elements"
+CONF_SENSOR = "sensor_id"
 
 ui_components_ns = cg.esphome_ns.namespace("ui_components")
 BaseElement = ui_components_ns.class_("BaseElement")
@@ -53,11 +55,16 @@ ELEMENT_SCHEMA = cv.Schema(
     }
 )
 
+ICON_SCHEMA = cv.Schema({cv.Required(icons.CONF_ICONS): cv.use_id(icons.IconProvider), cv.Required(CONF_SENSOR): cv.use_id(text_sensor.TextSensor)})
+
 ELEMENTS_REGISTRY = Registry()
 
 
-def register_element(name, type, schema):
-    schema = ELEMENT_SCHEMA.extend(schema).extend({cv.GenerateID(): cv.declare_id(type)})
+def register_element(name, type, schema, extra_schema=None):
+    schema = schema.extend({cv.GenerateID(): cv.declare_id(type)})
+    if extra_schema != None:
+        schema = cv.All(schema, extra_schema)
+
     return ELEMENTS_REGISTRY.register(name, type, schema)
 
 
@@ -68,6 +75,9 @@ async def generate_elements(config):
     elements = await cg.build_registry_list(
         ELEMENTS_REGISTRY, config[CONF_ELEMENTS]
     )
+    for x in elements:
+        await cg.register_parented(x, config[CONF_ID])
+
     return elements
 
 

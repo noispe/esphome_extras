@@ -3,7 +3,7 @@ import esphome.codegen as cg
 from esphome.core import Lambda
 from esphome.const import CONF_ID, CONF_TYPE, CONF_LAMBDA
 from esphome.components import text_sensor, sensor, binary_sensor, font, image, display, color
-from .common import ui_components_ns, BaseElement, TextAlign, generate_common_code, register_element
+from .common import ui_components_ns, BaseElement, TextAlign, generate_common_code, register_element, ELEMENT_SCHEMA, ICON_SCHEMA, CONF_SENSOR
 from .. import icons
 
 TextElement = ui_components_ns.class_("TextElement", BaseElement)
@@ -12,7 +12,6 @@ ShapeElement = ui_components_ns.class_("ShapeElement", BaseElement)
 TemplateElement = ui_components_ns.class_("TemplateElement", BaseElement)
 ImagePtr = image.Image_.operator("ptr")
 
-CONF_SENSOR = "sensor"
 CONF_BINARY_SENSOR = "sensor"
 CONF_TEXT = "text"
 CONF_TEXT_SENSOR = "text_sensor"
@@ -22,14 +21,17 @@ CONF_SHAPE = "shape"
 CONF_DEFAULT = "default"
 
 
-@register_element("text", TextElement, {
-    cv.Exclusive(CONF_TEXT, "text"): cv.templatable(cv.string),
-    cv.Exclusive(CONF_TEXT_SENSOR, "text"): cv.use_id(text_sensor.TextSensor),
-    cv.Exclusive(CONF_SENSOR, "text"): cv.use_id(sensor.Sensor),
-    cv.Exclusive(CONF_BINARY_SENSOR, "text"): cv.use_id(binary_sensor.BinarySensor),
-    cv.Required(CONF_FONT): cv.use_id(font.Font),
-    cv.Optional(CONF_DEFAULT): cv.string_strict,
-})
+@register_element("text", TextElement,
+                  ELEMENT_SCHEMA.extend({
+                      cv.Optional(CONF_TEXT): cv.templatable(cv.string),
+                      cv.Optional(CONF_TEXT_SENSOR): cv.use_id(text_sensor.TextSensor),
+                      cv.Optional(CONF_SENSOR): cv.use_id(sensor.Sensor),
+                      cv.Optional(CONF_BINARY_SENSOR): cv.use_id(binary_sensor.BinarySensor),
+                      cv.Optional(CONF_DEFAULT): cv.string_strict,
+                      cv.Required(CONF_FONT): cv.use_id(font.Font),
+                  }),
+                  cv.has_at_most_one_key(CONF_TEXT, CONF_TEXT_SENSOR, CONF_SENSOR, CONF_BINARY_SENSOR)
+                  )
 async def text_element_code(config, type_id):
     var = cg.new_Pvariable(type_id)
     await generate_common_code(var, config)
@@ -52,13 +54,13 @@ async def text_element_code(config, type_id):
     return var
 
 
-@register_element("image", ImageElement, {
-    cv.Exclusive(CONF_IMAGE , "image"): cv.templatable(cv.use_id(image.Image_)),
-    cv.Exclusive(CONF_TEXT_SENSOR, "image"): cv.Schema({
-        cv.Required(icons.CONF_ICONS): cv.use_id(icons.IconProvider),
-        cv.Required(CONF_SENSOR): cv.use_id(text_sensor.TextSensor),
-    })
-})
+@register_element("image", ImageElement,
+                  ELEMENT_SCHEMA.extend({
+                      cv.Optional(CONF_IMAGE): cv.templatable(cv.use_id(image.Image_)),
+                      cv.Optional(CONF_TEXT_SENSOR): ICON_SCHEMA
+                  }),
+                  cv.has_at_most_one_key(CONF_IMAGE, CONF_TEXT_SENSOR)
+                  )
 async def image_element_code(config, type_id):
     var = cg.new_Pvariable(type_id)
     await generate_common_code(var, config)
@@ -85,9 +87,9 @@ SHAPE_TYPES = {
 }
 
 
-@register_element("shape", ShapeElement, {
+@register_element("shape", ShapeElement, ELEMENT_SCHEMA.extend({
     cv.Required(CONF_SHAPE): cv.one_of(*SHAPE_TYPES, upper=True),
-})
+}))
 async def shape_element_code(config, type_id):
     var = cg.new_Pvariable(type_id)
     await generate_common_code(var, config)
@@ -95,9 +97,9 @@ async def shape_element_code(config, type_id):
     return var
 
 
-@register_element("template", TemplateElement, {
+@register_element("template", TemplateElement, ELEMENT_SCHEMA.extend({
     cv.Required(CONF_LAMBDA): cv.lambda_,
-})
+}))
 async def template_element_code(config, type_id):
     var = cg.new_Pvariable(type_id)
     await generate_common_code(var, config)
