@@ -1,0 +1,10 @@
+esphome:
+  name: test
+  platform: ESP32
+  board: tinypico
+external_components:
+  - source: ../components
+
+text_sensor:
+  - platform: restart_reason
+    name: Reset Reason
