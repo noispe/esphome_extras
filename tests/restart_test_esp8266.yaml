@@ -1,0 +1,10 @@
+esphome:
+  name: test
+  platform: ESP8266
+  board: wio_link
+external_components:
+  - source: ../components
+
+text_sensor:
+  - platform: restart_reason
+    name: Reset Reason
