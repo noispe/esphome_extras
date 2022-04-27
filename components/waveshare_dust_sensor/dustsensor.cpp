@@ -12,9 +12,7 @@ void WaveshareDustSensor::setup() {
   ESP_LOGCONFIG(TAG, "Setting up Waveshare Dust Sensor '%s'...", this->get_name().c_str());
   this->iled_pin_->setup();
   this->iled_pin_->digital_write(false);
-#ifdef ARDUINO_ARCH_ESP32
-  this->adc_->set_attenuation(ADC_ATTEN_DB_11);
-#endif
+  this->adc_->set_autorange(true);
 }
 void WaveshareDustSensor::dump_config() {
   LOG_SENSOR("", "Waveshare Dust Sensor", this);

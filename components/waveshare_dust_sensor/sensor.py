@@ -4,6 +4,7 @@ from esphome import pins
 from esphome.components import sensor
 from esphome.const import (
     CONF_ID,
+    CONF_VOLTAGE,
     ICON_GRAIN,
     UNIT_MICROGRAMS_PER_CUBIC_METER,
     DEVICE_CLASS_AQI,
