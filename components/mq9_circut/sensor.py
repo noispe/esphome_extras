@@ -50,7 +50,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_CO): sensor.sensor_schema(
                 unit_of_measurement=UNIT_PARTS_PER_MILLION,
                 icon=ICON_RADIATOR,
-                ccuracy_decimals=3,
+                accuracy_decimals=3,
                 device_class=DEVICE_CLASS_CARBON_MONOXIDE,
                 state_class=STATE_CLASS_MEASUREMENT,
             )
