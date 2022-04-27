@@ -9,8 +9,8 @@ from esphome.const import (
     CONF_TVOC,
     DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_CARBON_MONOXIDE,
-    DEVICE_CLASS_GAS,
-    ICON_CHEMICAL_WEAPON,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    ICON_RADIATOR,
     STATE_CLASS_MEASUREMENT
 )
 
@@ -41,18 +41,18 @@ CONFIG_SCHEMA = cv.All(
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_TVOC): sensor.sensor_schema(
-                UNIT_PARTS_PER_BILLION,
-                ICON_CHEMICAL_WEAPON,
-                2,
-                DEVICE_CLASS_GAS,
-                STATE_CLASS_MEASUREMENT,
+                unit_of_measurement=UNIT_PARTS_PER_BILLION,
+                icon=ICON_RADIATOR,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+                state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_CO): sensor.sensor_schema(
-                UNIT_PARTS_PER_MILLION,
-                ICON_CHEMICAL_WEAPON,
-                3,
-                DEVICE_CLASS_CARBON_MONOXIDE,
-                STATE_CLASS_MEASUREMENT,
+                unit_of_measurement=UNIT_PARTS_PER_MILLION,
+                icon=ICON_RADIATOR,
+                ccuracy_decimals=3,
+                device_class=DEVICE_CLASS_CARBON_MONOXIDE,
+                state_class=STATE_CLASS_MEASUREMENT,
             )
         }).extend(cv.COMPONENT_SCHEMA),
     cv.has_exactly_one_key(CONF_R0_CALIBRATE, CONF_R0),

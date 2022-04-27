@@ -6,6 +6,8 @@ from esphome.const import (
     CONF_ID,
     ICON_GRAIN,
     UNIT_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_AQI,
+    STATE_CLASS_MEASUREMENT
 )
 
 from esphome.components.adc import sensor as adc
@@ -20,7 +22,11 @@ WaveshareDustSensor = waveshare_dust_sensor_ns.class_(
 
 CONFIG_SCHEMA = (
     sensor.sensor_schema(
-        UNIT_MICROGRAMS_PER_CUBIC_METER, ICON_GRAIN, 2
+        unit_of_measurement=UNIT_MICROGRAMS_PER_CUBIC_METER,
+        icon=ICON_GRAIN,
+        accuracy_decimals=2,
+        device_class=DEVICE_CLASS_AQI,
+        state_class=STATE_CLASS_MEASUREMENT
     )
     .extend(
         {
