@@ -35,7 +35,6 @@ class WaveshareDustSensor : public sensor::Sensor, public PollingComponent {
  public:
   static constexpr float cov_ratio = 0.2f;          // ug/mmm / mv
   static constexpr float no_dust_voltage = 400.0f;  // mv
-  static constexpr float sys_voltage = 5000.0f;
 
   void update() override;
   void setup() override;
