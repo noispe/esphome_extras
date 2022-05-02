@@ -1,6 +1,6 @@
-> **Warning:** I would not consider this to be something to bet your life on.  I was annoyed by the unhelpful datasheet and after wamdering aroud the internet came up with this.
-
 # Theory of operation:
+
+> **Warning:** I would not consider this to be something to bet your life on.  I was annoyed by the unhelpful datasheet and after wandering aroud the internet came up with this.
 
 The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement.  One where the heater is on and one off.  This is achived with a simple circut.
 
@@ -8,39 +8,33 @@ The MQ-9 sensor is a "burn off" sensor.  So there aretwo periods for measurement
 
 ![schematic.png](schematic.png)
 
-[circutjs circut](https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcMBMcUHYMGZIA4UA2ATmIxAUgpABZsKBTAWjDACgAnEFFGkJwn1x8BfKmHhxO3XuBpDIfMPKjJ4bAC4hsaOUIQo9qiEzzQUpUnnlhChSNkL9s5y5cIJsYN04lUAJgwAZgCGAK4ANhrS2NbgxIY0eOIJxpJsAOa0yfGGCGCG3oZUkGwASjIigkaiqlQ0VEglUNAI5ZVGtuIqVIlULvTNMG0A7tqKRjrdYmxj2Abg9toLRVCz41X6hrWljnjL29Xz26zFa1zHIEcLzX5SAB7ahCZE2ngv9Ep8AGoAlgB2bEeyiQYAw+zAOUhEC+IAA4gAFACSAHl1pdVrElKlSo9HOJIIZsMQIBIkLC4QA5AAibAARtwEOQmCgIMSnO81o9MMRtPQvEhHLQ5CAALIARSYxHRC1qlxKMsM10KKH2pSAA)
+[circutjs circut](https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcMBMcUHYMGZIA4UA2ATmIxAUgpABZsKBTAWjDACgAnEFFGkbFP0h8BUZPE7de4GiOEy+VMBIAu-bIQX8EgsLLEQYhNLjAYwKBITzFsNQ9EI1ICG4UisUrJ+WVUAJgwAZgCGAK4ANiqSGnjgxIKycWAJYpYSAEpSIrr6olRUztQFUNAIbFk8fHrV7lpUiVTY0PQlMOUA7kLVeRr1bF3YOuB1Q7qpkAPd-IJjM1BsAB7geBBgSGhKcT0gAGoAlgB2SzJIZsl4WxA7AOIACgCSAPJTcymz1vGCk8vYZuD0OzJTS3AByABE2AAjL4gFizP4gYgFE68Kg4bgYJAYEEyEAAWQAikxiK9hsRNG8UHFJoNhqI5hSFgBzbTjWbDKpiWlspEgpx8hZdGgCpki6oTKbi2FJWGTAD2YgFhUgpGKsDgGFWljSYmwbCAA)
 
 The datasheet gives a corrilation between the Rs and R0.  R0 being our calibration point.  Rs is found using the expression below:
 
-```
- Rs\Rl = (Vc-VRl) / VRl
-```
+$\frac{Rs}{Rl} = \frac{(Vc-V_{Rl})}{V_{Rl}}$
 
-Given that the analog voltage reading is then used as `VRl`, Rl is noted at 10K, and Vc is 5V we need to solve for Rs:
+Given that the analog voltage reading is then used as $V_{Rl}$, $Rl$ is noted at 10K, and $Vc$ is 5V we need to solve for Rs:
 
-```
-Rs = ((Vc - VRl) / VRl) * 10000;
-```
+$Rs = \frac{Vc - V_{Rl}}{V_{Rl}} * 10000$
 
 The actual concentration would end up being:
 
-```
-ppm = Rs / R0
-```
+$ppm = \frac{Rs}{R0}$
+
 
 ## Calibration:
 
-The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use https://apps.automeris.io/wpd to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
+The datasheet provided unhelpfully provides a low resolution diagram of the response.  To extract some useful data from it use <https://apps.automeris.io/wpd> to modify [calibration data](calibration.json). If you feel you can do better give it a whirl.
 
 ![sensor_spec_2019nov0103.jpg](sensor_spec_2019nov0103.jpg)
 
-The image at first glance looks to have straight lines.  So the `y=mx+b` seems to be a great fit. Rs/R0 would be Y and ppm would be X. Unhelpfully it is in a log10/10g10 scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
+The image at first glance looks to have straight lines.  So the $y=mx+b$ seems to be a great fit. $\frac{Rs}{R0}$ would be Y and ppm would be X. Unhelpfully it is in a $\frac{log_{10}}{log_{10}}$ scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
 
 Once these values are calculated it can be used to convert to the ppm values:
 
-```
-ppm = 10 ^ ((log10(Rs/R0) - b) / m)
-```
+$ppm = 10^\frac{log_{10}\frac{Rs}{R0} - b}{m}$
+
 
 ## Notes on CO:
 
@@ -68,7 +62,7 @@ ppm = 10 ^ ((log10(Rs/R0) - b) / m)
 | 2200 - 5500 | Unhealthy |
 
 
-# Usage in ESPHome:
+# Usage in ESPHome
 
 Match `AD` to the MQ-9 A0 and `GPIO` to the control in schematic above.  `r0` can be provided or set to `0` in which case a niave attempt will be made to calibrate it based on 30 seconds of `burn off` readings.
 
