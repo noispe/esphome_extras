@@ -39,9 +39,7 @@ float Mq9Circut::calculate_ppm(calibration::gas_type type, float VRl) {
 
 void Mq9Circut::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MQ9 circut '%s'...", this->get_name().c_str());
-#ifdef ARDUINO_ARCH_ESP32
-  this->adc_->set_attenuation(ADC_ATTEN_DB_11);
-#endif
+  this->adc_->set_autorange(true);
   this->control_pin_->setup();
   this->control_pin_->digital_write(false);
   if (this->calibration_sensor_ != nullptr) {
