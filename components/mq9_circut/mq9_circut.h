@@ -42,7 +42,8 @@ template<typename T, typename Tl, size_t N> class MovingAvg {
 }  // namespace detail
 class Mq9Circut : public sensor::Sensor, public Component {
  public:
-  static constexpr float Vc = 5.0f;
+  static constexpr float Vch = 5.0f;
+  static constexpr float Vcl = 1.4f;
   static constexpr float Rl = 10000.0f;
   void update_co();
   void update_tvoc();

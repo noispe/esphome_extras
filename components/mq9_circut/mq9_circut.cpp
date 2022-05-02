@@ -28,6 +28,7 @@ void Mq9Circut::update_tvoc() {
 }
 
 float Mq9Circut::calculate_ppm(calibration::gas_type type, float VRl) {
+  float Vc = type == calibration::gas_type::CO ? Vcl : Vch;
   float rs_gas = ((Vc - VRl) / VRl) * Rl;  // Get value of RS in a gas
   float ratio = rs_gas / this->r0_;        // Get ratio rs_gas/rs_air
   float ppm = powf(10, (log10f(ratio) - calibration::setpoints[type].b) / calibration::setpoints[type].m);
@@ -94,7 +95,7 @@ float Mq9Circut::sample_calibration() {
   float r0 = 0.0f;
   float sensor_volt = this->calibration_accumulator_.current();
   if (sensor_volt != 0.0f) {
-    float rs_air = ((Vc * Rl) / sensor_volt) - Rl;  // Calculate RS in fresh air
+    float rs_air = ((Vch * Rl) / sensor_volt) - Rl;  // Calculate RS in fresh air
     r0 = rs_air / 10.0f;                            // Calculate R0 for air
     ESP_LOGD(TAG, "Calibrated R0=%.2f voltage=%.2f", r0, sensor_volt);
   }
