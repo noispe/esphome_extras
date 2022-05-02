@@ -34,14 +34,13 @@ The datasheet provided unhelpfully provides a low resolution diagram of the resp
 
 ![sensor_spec_2019nov0103.jpg](sensor_spec_2019nov0103.jpg)
 
-The image at first glance looks to have straight lines.  So the $`y=mx+b`$ seems to be a great fit. $`\frac{Rs}{R0}`$ would be Y and ppm would be X. Unhelpfully it is in a $`\frac{log_{10}}{log_{10}}`$ scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
+The image at first glance looks to have straight lines.  So the $`y=mx+b`$ seems to be a great fit. $`\frac{Rs}{R0}`$ would be Y and ppm would be X. Unhelpfully it is in a $`\frac{\log}{\log}`$ scale so it needs to be processed before calculation.  To update the calibration parameters run `calibration.py` to refresh `calibration.h`.  This will give a slope that can be followed to calculate ppm.
 
 Once these values are calculated it can be used to convert to the ppm values:
 
 ```math
-ppm = 10^\frac{log_{10}\frac{Rs}{R0} - b}{m}
+ppm = 10^{\frac{\log{\frac{Rs}{R0}} - b}{m}}
 ```
-
 
 ## Notes on CO:
 
