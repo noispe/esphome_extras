@@ -8,7 +8,10 @@ from . import axp192_ns, axp192_component, CONF_AXP192_ID
 DEPENDENCIES = ['axp192']
 axp192_sensor = axp192_ns.class_('axp192_sensor', sensor.Sensor, cg.Component)
 
-CONFIG_SCHEMA = sensor.sensor_schema(UNIT_PERCENT, ICON_BATTERY, 1).extend({
+CONFIG_SCHEMA = sensor.sensor_schema(
+    unit_of_measurement=UNIT_PERCENT, 
+    icon=ICON_BATTERY, 
+    accuracy_decimals=1).extend({
     cv.GenerateID(): cv.declare_id(axp192_sensor),
     cv.Required(CONF_AXP192_ID): cv.use_id(axp192_component)
 }).extend(cv.COMPONENT_SCHEMA)
