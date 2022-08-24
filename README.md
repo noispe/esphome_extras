@@ -2,7 +2,7 @@
 
 Custom components for my various devices.
 
-# Icon Provider
+## Icon Provider
 
 A component that allows easier access to "icon fonts" by name instead of the code point.
 
@@ -21,7 +21,7 @@ icons:
 
 ```
 
-# UI Components
+## UI Components
 
 A wrapper around creating UI elements that interact with sensors or other resources.  This is the core rendering component for a display or page.
 
@@ -32,11 +32,11 @@ A wrapper around creating UI elements that interact with sensors or other resour
 inside code-server
 
 ```shell
-$ docker run --rm --volumes-from codeserver_code_1  -it esphome/esphome compile  <path>/esphome_extras/gui_components.yaml
+docker run --rm --volumes-from codeserver_code_1  -it esphome/esphome compile  /sources/project/esphome_extras/gui_components.yaml
 ```
 
 desktop
 
 ```shell
-$ docker run --rm -v${PWD}:/esphome_extras  -it esphome/esphome compile  /esphome_extras/gui_components.yaml
+docker run --rm -v${PWD}:/esphome_extras  -it esphome/esphome compile  /esphome_extras/gui_components.yaml
 ```
