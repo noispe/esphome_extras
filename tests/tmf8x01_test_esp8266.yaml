@@ -1,0 +1,16 @@
+esphome:
+  name: test
+  platform: ESP8266
+  board: wio_link
+external_components:
+  - source: ../components
+
+i2c:
+  sda: 12
+  scl: 15
+
+sensor:
+  - platform: tof10120
+    id: foo
+  - platform: dfr_tmf8x01
+    id: blahz

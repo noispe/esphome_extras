@@ -28,6 +28,10 @@ class DfrTmf8x01Sensor : public sensor::Sensor, public PollingComponent, public 
 
   uint16_t get_distance();
 
+  bool write_bytes(uint8_t a_register, nonstd::span<const uint8_t> data) {
+    return I2CDevice::write_bytes(a_register, data.data(), data.size());
+  }
+
  private:
   bool wait_for_cpu_ready_();
   bool wait_for_boot_loader_();
@@ -45,11 +49,12 @@ class DfrTmf8x01Sensor : public sensor::Sensor, public PollingComponent, public 
   uint32_t get_unique_id_();
   uint16_t get_model_();
   void do_calibration_();
-  std::vector<uint8_t> get_calibration_data_();
-  std::vector<uint8_t> get_algo_state_data_();
+  nonstd::span<const uint8_t> get_calibration_data_();
+  nonstd::span<const uint8_t> get_algo_state_data_();
   std::vector<uint8_t> get_default_command_set_();
 
  private:
+
   std::vector<uint8_t> measure_command_set_{};
   GPIOPin *interrupt_pin_{nullptr};
   GPIOPin *enable_pin_{nullptr};

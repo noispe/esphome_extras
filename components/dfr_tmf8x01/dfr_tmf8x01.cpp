@@ -77,25 +77,25 @@ static constexpr uint8_t sta_err_soft_version = 0x03;
 static constexpr uint8_t sta_err_parameter = 0x04;
 
 // calibration
-static constexpr uint8_t PROGMEM tmf8801_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
+static constexpr uint8_t tmf8801_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
                                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
 static constexpr size_t tmf8801_calib_data_size = sizeof(tmf8801_calib_data);
-static constexpr uint8_t PROGMEM tmf8801_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
+static constexpr uint8_t tmf8801_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
                                                          0x00, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t tmf8801_algo_state_size = sizeof(tmf8801_algo_state);
 
-static constexpr uint8_t PROGMEM tmf8801_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
+static constexpr uint8_t tmf8801_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
 static constexpr size_t tmf8801_cmd_set_size = sizeof(tmf8801_cmd_set);
 
-static constexpr uint8_t PROGMEM tmf8701_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
+static constexpr uint8_t tmf8701_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
                                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
 static constexpr size_t tmf8701_calib_data_size = sizeof(tmf8701_calib_data);
 
-static constexpr uint8_t PROGMEM tmf8701_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
+static constexpr uint8_t tmf8701_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
                                                          0x00, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t tmf8701_algo_state_size = sizeof(tmf8701_algo_state);
 
-static constexpr uint8_t PROGMEM tmf8701_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
+static constexpr uint8_t tmf8701_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
 static constexpr size_t tmf8701_cmd_set_size = sizeof(tmf8701_cmd_set);
 
 // ram patch
@@ -220,10 +220,10 @@ bool DfrTmf8x01Sensor::download_ram_patch_() {
   }
 
   const uint8_t buffer1[] = {0x14, 0x01, 0x29};
-  this->write_bytes(0x08, buffer1, sizeof(buffer1));
+  I2CDevice::write_bytes(0x08, buffer1, sizeof(buffer1));
 
   const uint8_t buffer2[] = {0x43, 0x02, 0x00, 0x00};
-  this->write_bytes(0x08, buffer2, sizeof(buffer2));
+  I2CDevice::write_bytes(0x08, buffer2, sizeof(buffer2));
 
   const uint8_t *init_ptr = nullptr;
   if (this->get_model_() == model_tmf8801) {
@@ -250,7 +250,7 @@ bool DfrTmf8x01Sensor::download_ram_patch_() {
   }
 
   const uint8_t buffer3[] = {0x11, 0x00};
-  this->write_bytes(0x08, buffer3, sizeof(buffer3));
+  I2CDevice::write_bytes(0x08, buffer3, sizeof(buffer3));
 
   return this->wait_for_cpu_ready_();
 }
@@ -315,9 +315,7 @@ uint32_t DfrTmf8x01Sensor::get_unique_id_() {
 
 uint16_t DfrTmf8x01Sensor::get_model_() { return (this->get_unique_id_() >> 16) & 0xFFFF; }
 
-uint16_t DfrTmf8x01Sensor::get_distance() {
-  return 0;
-}
+uint16_t DfrTmf8x01Sensor::get_distance() { return 0; }
 
 void DfrTmf8x01Sensor::do_calibration_() {
   if (calibration_mode_ == calibration_mode_t::CALIBRATE) {
@@ -343,27 +341,27 @@ void DfrTmf8x01Sensor::do_calibration_() {
   }
 }
 
-std::vector<uint8_t> DfrTmf8x01Sensor::get_calibration_data_() {
+nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_calibration_data_() {
   auto model = this->get_model_();
   if (model == model_tmf8801) {
-    return detail::progmem_copy(nonstd::span<const uint8_t, tmf8801_calib_data_size>{tmf8801_calib_data});
+    return nonstd::span<const uint8_t, tmf8801_calib_data_size>{tmf8801_calib_data};
   } else if (model == model_tmf8701) {
-    return detail::progmem_copy(nonstd::span<const uint8_t, tmf8701_calib_data_size>{tmf8701_calib_data});
+    return nonstd::span<const uint8_t, tmf8701_calib_data_size>{tmf8701_calib_data};
   } else {
     // error
-    return std::vector<uint8_t>{};
+    return nonstd::span<const uint8_t>{};
   }
 }
 
-std::vector<uint8_t> DfrTmf8x01Sensor::get_algo_state_data_() {
+nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_algo_state_data_() {
   auto model = this->get_model_();
   if (model == model_tmf8801) {
-    return detail::progmem_copy(nonstd::span<const uint8_t, tmf8801_algo_state_size>{tmf8801_algo_state});
+    return nonstd::span<const uint8_t, tmf8801_algo_state_size>{tmf8801_algo_state};
   } else if (model == model_tmf8701) {
-    return detail::progmem_copy(nonstd::span<const uint8_t, tmf8701_algo_state_size>{tmf8701_algo_state});
+    return nonstd::span<const uint8_t, tmf8701_algo_state_size>{tmf8701_algo_state};
   } else {
     // error
-    return std::vector<uint8_t>{};
+    return nonstd::span<const uint8_t>{};
   }
 }
 
