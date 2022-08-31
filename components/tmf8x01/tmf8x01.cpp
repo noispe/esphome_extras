@@ -1,4 +1,4 @@
-#include "dfr_tmf8x01.h"
+#include "tmf8x01.h"
 
 #include <algorithm>
 #include <numeric>
@@ -7,12 +7,13 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
-#include "span.hpp"
+#include "TMF8701.h"
+#include "TMF8801.h"
 
 namespace esphome {
-namespace dfr_tmf8x01 {
+namespace tmf8x01 {
 
-static const char *const TAG = "dfr_tmf8x01";
+static const char *const TAG = "tmf8x01";
 
 namespace detail {
 
@@ -78,32 +79,30 @@ static constexpr uint8_t sta_err_parameter = 0x04;
 
 // calibration
 static constexpr uint8_t tmf8801_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
-                                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
+                                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
 static constexpr size_t tmf8801_calib_data_size = sizeof(tmf8801_calib_data);
-static constexpr uint8_t tmf8801_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
-                                                         0x00, 0x00, 0x00, 0x00, 0x00};
+static constexpr uint8_t tmf8801_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t tmf8801_algo_state_size = sizeof(tmf8801_algo_state);
 
 static constexpr uint8_t tmf8801_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
 static constexpr size_t tmf8801_cmd_set_size = sizeof(tmf8801_cmd_set);
 
 static constexpr uint8_t tmf8701_calib_data[] = {0x41, 0x57, 0x01, 0xFD, 0x04, 0x00, 0x00,
-                                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
+                                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04};
 static constexpr size_t tmf8701_calib_data_size = sizeof(tmf8701_calib_data);
 
-static constexpr uint8_t tmf8701_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00,
-                                                         0x00, 0x00, 0x00, 0x00, 0x00};
+static constexpr uint8_t tmf8701_algo_state[] = {0xB1, 0xA9, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static constexpr size_t tmf8701_algo_state_size = sizeof(tmf8701_algo_state);
 
 static constexpr uint8_t tmf8701_cmd_set[] = {0x01, 0xA3, 0x00, 0x00, 0x00, 0x64, 0x03, 0x84, 0x02};
 static constexpr size_t tmf8701_cmd_set_size = sizeof(tmf8701_cmd_set);
 
 // ram patch
-constexpr uint8_t PROGMEM DFRobot_TMF8701_initBuf[] = {0};
-static constexpr size_t DFRobot_TMF8701_initBuf_size = sizeof(DFRobot_TMF8701_initBuf);
+// constexpr uint8_t PROGMEM DFRobot_TMF8701_initBuf[] = {0};
+// static constexpr size_t DFRobot_TMF8701_initBuf_size = sizeof(DFRobot_TMF8701_initBuf);
 
-constexpr uint8_t PROGMEM DFRobot_TMF8801_initBuf[] = {0};
-static constexpr size_t DFRobot_TMF8801_initBuf_size = sizeof(DFRobot_TMF8801_initBuf);
+// constexpr uint8_t PROGMEM DFRobot_TMF8801_initBuf[] = {0};
+// static constexpr size_t DFRobot_TMF8801_initBuf_size = sizeof(DFRobot_TMF8801_initBuf);
 
 // Helpers from https://github.com/DFRobot/DFRobot_TMF8x01/blob/master/src/DFRobot_TMF8x01.h
 
@@ -146,10 +145,10 @@ typedef struct {
   uint8_t sysclock3; /**< System clock/time stamp in units of 0.2 µs.*/
 } result_t;
 
-bool DfrTmf8x01Sensor::wait_for_application_() {
+bool Tmf8x01Sensor::wait_for_application_() {
   int retry = 10;
   while (retry-- != 0) {
-    if (this->get_application_id_() == 0xc0) {
+    if (this->get_application_id_() == 0XC0) {
       return true;
     }
     delay_microseconds_safe(100);
@@ -159,7 +158,7 @@ bool DfrTmf8x01Sensor::wait_for_application_() {
   return false;
 }
 
-bool DfrTmf8x01Sensor::wait_for_cpu_ready_() {
+bool Tmf8x01Sensor::wait_for_cpu_ready_() {
   int retry = 10;
   while (retry-- != 0) {
     if (this->get_cpu_state_() == 0x41) {
@@ -172,7 +171,7 @@ bool DfrTmf8x01Sensor::wait_for_cpu_ready_() {
   return false;
 }
 
-bool DfrTmf8x01Sensor::wait_for_boot_loader_() {
+bool Tmf8x01Sensor::wait_for_boot_loader_() {
   int retry = 10;
   while (retry-- != 0) {
     if (this->get_application_id_() == 0x80) {
@@ -184,7 +183,7 @@ bool DfrTmf8x01Sensor::wait_for_boot_loader_() {
   return false;
 }
 
-uint8_t DfrTmf8x01Sensor::get_application_id_() {
+uint8_t Tmf8x01Sensor::get_application_id_() {
   auto id = this->read_byte(reg_mtf8x01_appid);
   if (id.has_value()) {
     return id.value();
@@ -193,7 +192,7 @@ uint8_t DfrTmf8x01Sensor::get_application_id_() {
   return 0;
 }
 
-uint8_t DfrTmf8x01Sensor::get_cpu_state_() {
+uint8_t Tmf8x01Sensor::get_cpu_state_() {
   auto state = this->read_byte(reg_mtf8x01_enable);
   if (state.has_value()) {
     return state.value();
@@ -202,17 +201,17 @@ uint8_t DfrTmf8x01Sensor::get_cpu_state_() {
   return 0;
 }
 
-bool DfrTmf8x01Sensor::load_application_() {
+bool Tmf8x01Sensor::load_application_() {
   this->write_byte(reg_mtf8x01_appreqid, 0xc0);
   return this->wait_for_application_();
 }
 
-bool DfrTmf8x01Sensor::load_boot_loader_() {
+bool Tmf8x01Sensor::load_boot_loader_() {
   this->write_byte(reg_mtf8x01_appreqid, 0x80);
   return this->wait_for_boot_loader_();
 }
 
-bool DfrTmf8x01Sensor::download_ram_patch_() {
+bool Tmf8x01Sensor::download_ram_patch_() {
   if (this->get_application_id_() != 0x80) {
     if (!this->load_boot_loader_()) {
       return false;
@@ -220,10 +219,15 @@ bool DfrTmf8x01Sensor::download_ram_patch_() {
   }
 
   const uint8_t buffer1[] = {0x14, 0x01, 0x29};
-  I2CDevice::write_bytes(0x08, buffer1, sizeof(buffer1));
-
+  I2CDevice::write_bytes(reg_mtf8x01_cmd_data7, buffer1, sizeof(buffer1));
+  if (!get_status_ack_()) {
+    return false;
+  }
   const uint8_t buffer2[] = {0x43, 0x02, 0x00, 0x00};
-  I2CDevice::write_bytes(0x08, buffer2, sizeof(buffer2));
+  I2CDevice::write_bytes(reg_mtf8x01_cmd_data7, buffer2, sizeof(buffer2));
+  if (!get_status_ack_()) {
+    return false;
+  }
 
   const uint8_t *init_ptr = nullptr;
   if (this->get_model_() == model_tmf8801) {
@@ -236,35 +240,38 @@ bool DfrTmf8x01Sensor::download_ram_patch_() {
 
   while (uint8_t flag = progmem_read_byte(init_ptr++) > 0) {
     std::vector<uint8_t> buffer{};
-    buffer.reserve(flag);
+    buffer.push_back(0x41);
     buffer.push_back(flag);
     size_t idx = 0;
     for (uint8_t idx = 0; idx < flag; idx++) {
       buffer.push_back(progmem_read_byte(init_ptr++));
     }
     buffer.push_back(calculate_checksum_(buffer));
-    this->write_bytes(0x41, buffer);
+    this->write_bytes(reg_mtf8x01_cmd_data7, buffer);
     if (!get_status_ack_()) {
       return false;
     }
   }
 
   const uint8_t buffer3[] = {0x11, 0x00};
-  I2CDevice::write_bytes(0x08, buffer3, sizeof(buffer3));
+  I2CDevice::write_bytes(reg_mtf8x01_cmd_data7, buffer3, sizeof(buffer3));
 
   return this->wait_for_cpu_ready_();
 }
 
-bool DfrTmf8x01Sensor::get_status_ack_() {
-  auto val = this->read_bytes<3>(0x80);
-  return (val.has_value() && val.value()[2] == 0xFF);
+bool Tmf8x01Sensor::get_status_ack_() {
+  auto res = read_bytes<3>(reg_mtf8x01_cmd_data7);
+  if (res.has_value() && encode_value<uint32_t>(res.value()) == 0xFF0000) {
+    return true;
+  }
+  return false;
 }
 
-uint8_t DfrTmf8x01Sensor::calculate_checksum_(nonstd::span<const uint8_t> buffer) {
+uint8_t Tmf8x01Sensor::calculate_checksum_(nonstd::span<const uint8_t> buffer) {
   return std::accumulate(buffer.begin(), buffer.end(), 0) ^ 0xFF;
 }
 
-uint8_t DfrTmf8x01Sensor::get_register_contents_() {
+uint8_t Tmf8x01Sensor::get_register_contents_() {
   auto value = this->read_byte(reg_mtf8x01_contents);
   if (value.has_value()) {
     return value.value();
@@ -273,7 +280,7 @@ uint8_t DfrTmf8x01Sensor::get_register_contents_() {
   return 0;
 }
 
-bool DfrTmf8x01Sensor::wait_for_status_register_(uint8_t status) {
+bool Tmf8x01Sensor::wait_for_status_register_(uint8_t status) {
   int retry = 10;
   while (retry-- != 0) {
     if (this->get_register_contents_() == status) {
@@ -286,7 +293,7 @@ bool DfrTmf8x01Sensor::wait_for_status_register_(uint8_t status) {
   return false;
 }
 
-void DfrTmf8x01Sensor::modify_command_set_(uint8_t index, uint8_t bit, bool value) {
+void Tmf8x01Sensor::modify_command_set_(uint8_t index, uint8_t bit, bool value) {
   if (index > (measure_command_set_.size() - 1) || bit > 7) {
     return;
   }
@@ -297,7 +304,7 @@ void DfrTmf8x01Sensor::modify_command_set_(uint8_t index, uint8_t bit, bool valu
   }
 }
 
-uint32_t DfrTmf8x01Sensor::get_unique_id_() {
+uint32_t Tmf8x01Sensor::get_unique_id_() {
   this->write_byte(reg_mtf8x01_command, 0x47);
   int retry = 10;
   while (retry-- != 0) {
@@ -313,15 +320,15 @@ uint32_t DfrTmf8x01Sensor::get_unique_id_() {
   return 0;
 }
 
-uint16_t DfrTmf8x01Sensor::get_model_() { return (this->get_unique_id_() >> 16) & 0xFFFF; }
+uint16_t Tmf8x01Sensor::get_model_() { return (this->get_unique_id_() >> 16) & 0xFFFF; }
 
-uint16_t DfrTmf8x01Sensor::get_distance() { return 0; }
+uint16_t Tmf8x01Sensor::get_distance() { return 0; }
 
-void DfrTmf8x01Sensor::do_calibration_() {
+void Tmf8x01Sensor::do_calibration_() {
   if (calibration_mode_ == calibration_mode_t::CALIBRATE) {
     this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_calib, true);
     this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_algo, false);
-    this->write_byte(reg_mtf8x01_command, 0x0b);
+    this->write_byte(reg_mtf8x01_command, 0x0B);
     this->write_bytes(reg_mtf8x01_result_number, this->get_calibration_data_());
   } else if (calibration_mode_ == calibration_mode_t::CALIBRATE_AND_ALGO_STATE) {
     this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_calib, true);
@@ -330,18 +337,20 @@ void DfrTmf8x01Sensor::do_calibration_() {
     this->write_bytes(reg_mtf8x01_result_number, this->get_calibration_data_());
     this->write_bytes(reg_mtf8x01_statedatawr, this->get_algo_state_data_());
   } else {
-    this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_calib, true);
-    this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_algo, true);
+    this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_calib, false);
+    this->modify_command_set_(cmdset_index_cmd7, cmdset_bit_algo, false);
   }
   this->write_bytes(reg_mtf8x01_cmd_data7, this->measure_command_set_);
   delay_microseconds_safe(10000);
   if (!this->wait_for_status_register_(0x55)) {
-    // error
+    this->status_set_error();
     return;
   }
+  // data ready
+
 }
 
-nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_calibration_data_() {
+nonstd::span<const uint8_t> Tmf8x01Sensor::get_calibration_data_() {
   auto model = this->get_model_();
   if (model == model_tmf8801) {
     return nonstd::span<const uint8_t, tmf8801_calib_data_size>{tmf8801_calib_data};
@@ -353,7 +362,7 @@ nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_calibration_data_() {
   }
 }
 
-nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_algo_state_data_() {
+nonstd::span<const uint8_t> Tmf8x01Sensor::get_algo_state_data_() {
   auto model = this->get_model_();
   if (model == model_tmf8801) {
     return nonstd::span<const uint8_t, tmf8801_algo_state_size>{tmf8801_algo_state};
@@ -365,7 +374,7 @@ nonstd::span<const uint8_t> DfrTmf8x01Sensor::get_algo_state_data_() {
   }
 }
 
-std::vector<uint8_t> DfrTmf8x01Sensor::get_default_command_set_() {
+std::vector<uint8_t> Tmf8x01Sensor::get_default_command_set_() {
   auto model = this->get_model_();
   if (model == model_tmf8801) {
     return detail::progmem_copy(nonstd::span<const uint8_t, tmf8801_cmd_set_size>{tmf8801_cmd_set});
@@ -377,17 +386,17 @@ std::vector<uint8_t> DfrTmf8x01Sensor::get_default_command_set_() {
   }
 }
 
-void DfrTmf8x01Sensor::set_enable_pin(GPIOPin *enable_pin) { enable_pin_ = enable_pin; }
+void Tmf8x01Sensor::set_enable_pin(GPIOPin *enable_pin) { enable_pin_ = enable_pin; }
 
-void DfrTmf8x01Sensor::set_interrupt_pin(GPIOPin *interrupt_pin) { interrupt_pin_ = interrupt_pin; }
+void Tmf8x01Sensor::set_interrupt_pin(GPIOPin *interrupt_pin) { interrupt_pin_ = interrupt_pin; }
 
-void DfrTmf8x01Sensor::set_calibration_mode(const calibration_mode_t &calibration_mode) {
+void Tmf8x01Sensor::set_calibration_mode(const calibration_mode_t &calibration_mode) {
   calibration_mode_ = calibration_mode;
 }
 
-void DfrTmf8x01Sensor::set_sensor_mode(const sensor_mode_t &sensor_mode) { sensor_mode_ = sensor_mode; }
+void Tmf8x01Sensor::set_sensor_mode(const sensor_mode_t &sensor_mode) { sensor_mode_ = sensor_mode; }
 
-void DfrTmf8x01Sensor::setup() {
+void Tmf8x01Sensor::setup() {
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
     this->enable_pin_->digital_write(false);
@@ -407,7 +416,14 @@ void DfrTmf8x01Sensor::setup() {
   if (this->get_application_id_() == 0x80) {
     // download ram patch
 
-    if (!this->download_ram_patch_() || !this->wait_for_application_()) {
+    if (!this->download_ram_patch_()) {
+      this->status_set_error();
+      return;
+    }
+    if(!this->wait_for_application_()) {
+      this->load_application_();
+    }
+    if(!this->wait_for_application_()) {
       this->status_set_error();
       return;
     }
@@ -417,7 +433,7 @@ void DfrTmf8x01Sensor::setup() {
   this->do_calibration_();
 }
 
-void DfrTmf8x01Sensor::dump_config() {
+void Tmf8x01Sensor::dump_config() {
   LOG_SENSOR("", "DFR_TMF8X01", this);
   LOG_UPDATE_INTERVAL(this);
   LOG_I2C_DEVICE(this);
@@ -427,7 +443,7 @@ void DfrTmf8x01Sensor::dump_config() {
   ESP_LOGCONFIG(TAG, "Calibration: %d", this->calibration_mode_);
 }
 
-void DfrTmf8x01Sensor::update() {}
+void Tmf8x01Sensor::update() {}
 
-}  // namespace dfr_tmf8x01
+}  // namespace tmf8x01
 }  // namespace esphome

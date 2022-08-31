@@ -13,12 +13,12 @@ from esphome.const import (
 
 DEPENDENCIES = ["i2c"]
 
-dfr_tmf8x01_ns = cg.esphome_ns.namespace("dfr_tmf8x01")
-DfrTmf8x01Sensor = dfr_tmf8x01_ns.class_(
-    "DfrTmf8x01Sensor", sensor.Sensor, cg.PollingComponent, i2c.I2CDevice
+tmf8x01_ns = cg.esphome_ns.namespace("tmf8x01")
+Tmf8x01Sensor = tmf8x01_ns.class_(
+    "Tmf8x01Sensor", sensor.Sensor, cg.PollingComponent, i2c.I2CDevice
 )
 
-sensor_mode = dfr_tmf8x01_ns.enum("sensor_mode_t")
+sensor_mode = tmf8x01_ns.enum("sensor_mode_t")
 SENSOR_MODE = {
     'PROXIMITY': sensor_mode.PROXIMITY,
     'DISTANCE': sensor_mode.DISTANCE,
@@ -26,7 +26,7 @@ SENSOR_MODE = {
 }
 CONF_SENSOR_MODE = "sensor_mode"
 
-calibration_mode = dfr_tmf8x01_ns.enum("calibration_mode_t")
+calibration_mode = tmf8x01_ns.enum("calibration_mode_t")
 CALIBRATION_MODE = {
     'NONE': calibration_mode.NONE,
     'CALIBRATE': calibration_mode.CALIBRATE,
@@ -38,7 +38,7 @@ CONF_INTERRUPT_PIN = "interrupt_pin"
 
 CONFIG_SCHEMA = (
     sensor.sensor_schema(
-        DfrTmf8x01Sensor,
+        Tmf8x01Sensor,
         unit_of_measurement=UNIT_METER,
         accuracy_decimals=3,
         icon=ICON_ARROW_EXPAND_VERTICAL,

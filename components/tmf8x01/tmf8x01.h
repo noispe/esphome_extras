@@ -10,11 +10,11 @@
 #include "span.hpp"
 
 namespace esphome {
-namespace dfr_tmf8x01 {
+namespace tmf8x01 {
 enum class sensor_mode_t { PROXIMITY, DISTANCE, COMBINED };
 enum class calibration_mode_t { NONE, CALIBRATE, CALIBRATE_AND_ALGO_STATE };
 
-class DfrTmf8x01Sensor : public sensor::Sensor, public PollingComponent, public i2c::I2CDevice {
+class Tmf8x01Sensor : public sensor::Sensor, public PollingComponent, public i2c::I2CDevice {
  public:
   void set_interrupt_pin(GPIOPin *interrupt_pin);
   void set_enable_pin(GPIOPin *enable_pin);
@@ -54,7 +54,9 @@ class DfrTmf8x01Sensor : public sensor::Sensor, public PollingComponent, public 
   std::vector<uint8_t> get_default_command_set_();
 
  private:
-
+  std::array<uint32_t,5> host_time_{};
+  std::array<uint32_t,5> moudle_time_{};
+  uint8_t time_index_ = 0;
   std::vector<uint8_t> measure_command_set_{};
   GPIOPin *interrupt_pin_{nullptr};
   GPIOPin *enable_pin_{nullptr};
@@ -62,5 +64,5 @@ class DfrTmf8x01Sensor : public sensor::Sensor, public PollingComponent, public 
   sensor_mode_t sensor_mode_ = sensor_mode_t::PROXIMITY;
 };
 
-}  // namespace dfr_tmf8x01
+}  // namespace tmf8x01
 }  // namespace esphome
