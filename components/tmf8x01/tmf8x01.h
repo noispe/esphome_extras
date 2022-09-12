@@ -49,14 +49,17 @@ class Tmf8x01Sensor : public sensor::Sensor, public PollingComponent, public i2c
   uint32_t get_unique_id_();
   uint16_t get_model_();
   void do_calibration_();
+  void stop_command_();
+  void stop_measurement_();
   nonstd::span<const uint8_t> get_calibration_data_();
   nonstd::span<const uint8_t> get_algo_state_data_();
   std::vector<uint8_t> get_default_command_set_();
 
  private:
+  uint8_t time_index_ = 0;
+  bool measure_active_flag_ = false;
   std::array<uint32_t,5> host_time_{};
   std::array<uint32_t,5> moudle_time_{};
-  uint8_t time_index_ = 0;
   std::vector<uint8_t> measure_command_set_{};
   GPIOPin *interrupt_pin_{nullptr};
   GPIOPin *enable_pin_{nullptr};

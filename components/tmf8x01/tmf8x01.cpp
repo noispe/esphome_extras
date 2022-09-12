@@ -127,6 +127,7 @@ typedef union {
   uint8_t value; /**< The value of enable register.*/
 } __attribute__((packed)) enable_reg_t;
 
+// 11 bytes
 typedef struct {
   uint8_t status;       /**< Current status or current general operation.*/
   uint8_t regContents;  /**< Current contents of the I²C RAM from 0x20 to 0xEF, the coding is as follows:
@@ -137,12 +138,8 @@ typedef struct {
     uint8_t reliability : 6; /**< Reliability of object - valid range 0..63 where 63 is best.*/
     uint8_t meastatus : 2;   /**< Will indicate the status of the measurement.*/
   } result_info_t;
-  uint8_t disL;      /**< Distance to the peak in [mm] of the object, least significant byte.*/
-  uint8_t disH;      /**< Distance to the peak in [mm] of the object, most significant byte.*/
-  uint8_t sysclock0; /**< System clock/time stamp in units of 0.2 µs.*/
-  uint8_t sysclock1; /**< System clock/time stamp in units of 0.2 µs.*/
-  uint8_t sysclock2; /**< System clock/time stamp in units of 0.2 µs.*/
-  uint8_t sysclock3; /**< System clock/time stamp in units of 0.2 µs.*/
+  uint16_t dis;      /**< Distance to the peak in [mm] of the object*/
+  uint32_t sysclock; /**< System clock/time stamp in units of 0.2 µs.*/
 } result_t;
 
 bool Tmf8x01Sensor::wait_for_application_() {
@@ -261,7 +258,11 @@ bool Tmf8x01Sensor::download_ram_patch_() {
 
 bool Tmf8x01Sensor::get_status_ack_() {
   auto res = read_bytes<3>(reg_mtf8x01_cmd_data7);
-  if (res.has_value() && encode_value<uint32_t>(res.value()) == 0xFF0000) {
+  if (!res.has_value()){
+    return false;
+  }
+  const auto bytes = res.value();
+  if (encode_uint24(bytes[0], bytes[1],bytes[2]) == 0xFF0000) {
     return true;
   }
   return false;
@@ -311,6 +312,7 @@ uint32_t Tmf8x01Sensor::get_unique_id_() {
     if (this->read_byte(reg_mtf8x01_contents) == 0x47) {
       auto res = this->read_bytes<4>(reg_mtf8x01_version_serialnum);
       if (res.has_value()) {
+        this->stop_command();
         return encode_value<uint32_t>(res.value());
       }
     }
@@ -444,6 +446,18 @@ void Tmf8x01Sensor::dump_config() {
 }
 
 void Tmf8x01Sensor::update() {}
+
+void Tmf8x01Sensor::stop_command_() {
+  write_byte(reg_mtf8x01_command,0xff);
+  delay_microseconds_safe(500);
+}
+
+void Tmf8x01Sensor::stop_measurement_() {
+  this->measure_active_flag_ = false;
+  this->stop_command_();
+  this->time_index_ = 0;
+
+}
 
 }  // namespace tmf8x01
 }  // namespace esphome
