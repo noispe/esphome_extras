@@ -8,6 +8,7 @@
 #include <Esp.h>
 #elif defined(USE_ESP_IDF)
 #include <esp_system.h>
+#include <esp_sleep.h>
 #endif
 
 static const char *const TAG = "reset_reason.text_sensor";
