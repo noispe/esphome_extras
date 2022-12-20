@@ -1,0 +1,67 @@
+esphome:
+  name: guitest
+  platform: ESP32
+  board: esp-wrover-kit
+external_components:
+  - source: components
+
+wifi:
+  networks:
+    - ssid: "MySSID"
+      password: "password1"
+
+font:
+  - file: "3rdparty/tiny.ttf"
+    id: text_normal
+
+icons:
+  - font_file: "3rdparty/icomoon.ttf"
+    metadata_file: "3rdparty/icomoon.json"
+    size: 128
+    icons:
+      - uniE905
+    id: icon_1
+
+image:
+  - file: 3rdparty/sample.jpg
+    id: image_1
+
+ui_components:
+  id: gui_1
+  font: text_normal
+  elements:
+    - text_button:
+        control: ok_button
+        text: foo
+        touchscreen_id: touch
+        x: 25
+        y: 25
+        width: 100
+        height: 100
+touchscreen:
+  - platform: lilygo_t5_47
+    id: touch
+    interrupt_pin: GPIO13
+
+
+binary_sensor:
+  - platform: template
+    id: ok_button
+    on_click:
+      min_length: 50ms
+      max_length: 350ms
+      then:
+        - component.update: display_1
+
+i2c:
+  sda: 26
+  scl: 32
+
+display:
+  - platform: ssd1306_i2c
+    id: display_1
+    model: "SSD1306 128x64"
+    reset_pin: 27
+    address: 0x3C
+    lambda: |-
+      id(gui_1)->draw(it);
