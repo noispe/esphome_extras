@@ -1,28 +1,55 @@
 #pragma once
 
 #include "esphome/components/display/display_buffer.h"
-#ifdef USE_TEXT_SENSOR
-#include "esphome/components/text_sensor/text_sensor.h"
-#endif
-#ifdef USE_SENSOR
-#include "esphome/components/sensor/sensor.h"
-#endif
-#ifdef USE_BINARY_SENSOR
-#include "esphome/components/binary_sensor/binary_sensor.h"
-#endif
-#ifdef USE_ICON_PROVIDER
-#include "esphome/components/icons/icon_provider.h"
-#endif
-
 #include "esphome/core/component.h"
 #include "esphome/core/color.h"
+#include "esphome/core/helpers.h"
 #include <string>
 #include <functional>
-#include <vector>
+#include <tuple>
 
 namespace esphome {
 namespace ui_components {
-class BaseElement {
+
+class BaseUiComponent {
+ public:
+  BaseUiComponent() = default;
+  virtual ~BaseUiComponent() = default;
+
+  virtual void draw(display::DisplayBuffer &disp) = 0;
+
+  Color default_fg() const { return default_fg_; }
+  void set_default_fg(const Color &default_fg) { default_fg_ = default_fg; }
+
+  Color default_bg() const { return default_bg_; }
+  void set_default_bg(const Color &default_bg) { default_bg_ = default_bg; }
+
+  display::Font *default_font() const { return default_font_; }
+  void set_default_font(display::Font *default_font) { default_font_ = default_font; }
+
+ private:
+  Color default_fg_ = Color::BLACK;
+  Color default_bg_ = Color::WHITE;
+  display::Font *default_font_ = nullptr;
+};
+
+template<typename... Args> class UIComponents : public BaseUiComponent {
+ public:
+  UIComponents(Args... args) : content_(std::make_tuple(args...)) {}
+  void draw(display::DisplayBuffer &disp) override {
+    draw_helper(disp, this->content_, typename gens<sizeof...(Args)>::type());
+  }
+
+ protected:
+  template<int... Is>
+  void draw_helper(display::DisplayBuffer &disp, const std::tuple<Args...> &t, seq<Is...> /*meta*/) {
+    static_cast<void>(std::initializer_list<char>{(static_cast<void>(std::get<Is>(t)->draw(disp)), '0')...});
+  }
+
+  std::tuple<Args...> content_{};
+};
+
+class BaseElement : public Parented<BaseUiComponent> {
  public:
   virtual ~BaseElement() = default;
 
@@ -36,98 +63,42 @@ class BaseElement {
   void set_height(int height) { height_ = height; }
   void set_alignment(const display::TextAlign &alignment) { alignment_ = alignment; }
   void set_border(bool border) { border_ = border; }
-
+  void set_visible(bool visible) { visible_ = visible; }
+  bool get_visible() { return visible_; }
+  Color get_fg_color() const { return fg_color_.has_value() ? fg_color_.value() : parent_->default_fg();}
+  Color get_bg_color() const  { return bg_color_.has_value() ? bg_color_.value() : parent_->default_bg();};
  protected:
   void position_inside(int *content_x, int *content_y, int content_width, int content_height);
-  int x() const { return border_ ? x_ + 1 : x_; }
-  int y() const { return border_ ? y_ + 1 : y_; };
-  int width() const { return border_ ? width_ - 2 : width_; }
-  int height() const { return border_ ? height_ - 2 : height_; };
-  Color fg_color_ = display::COLOR_ON;
-  Color bg_color_ = display::COLOR_OFF;
+  int x() const { return margin() + border_ ? x_ + 1 : x_; }
+  int y() const { return margin() + border_ ? y_ + 1 : y_; };
+  int width() const { return (-2 * margin()) + border_ ? width_ - 2 : width_; }
+  int height() const { return (-2 * margin()) + border_ ? height_ - 2 : height_; };
+  virtual int margin() const { return 0; }
+  optional<Color> fg_color_;
+  optional<Color> bg_color_;
   int x_ = 0;
   int y_ = 0;
   int width_ = 0;
   int height_ = 0;
   bool border_ = false;
   display::TextAlign alignment_ = display::TextAlign::TOP_LEFT;
+  bool visible_ = true;
 };
 
-class UIComponents {
- public:
-  void draw(display::DisplayBuffer &disp) const;
-  void set_content(const std::vector<BaseElement *> &content) { content_ = content; }
+// Move to displaybuffer at some point
+struct Primitives {
+  enum Corner { TOP_RIGHT = 0x4, TOP_LEFT = 0x2, BOTTOM_LEFT = 0x1, BOTTOM_RIGHT = 0x8 };
 
- protected:
-  std::vector<BaseElement *> content_{};
+  static void quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter, int radius,
+                             Primitives::Corner corner, const Color &color);
+  static void filled_quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter, int radius, int corner,
+                                    int offset, const Color &color);
+  static void round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height, int radius,
+                         const Color &color);
+  static void filled_round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height, int radius,
+                                const Color &color);
 };
 
-class TextElement : public BaseElement {
- public:
-  void draw(display::DisplayBuffer &disp) override;
-  void set_font(display::Font *font) { font_ = font; }
-#ifdef USE_SENSOR
-  void set_content(sensor::Sensor *content);
-#endif
-#ifdef USE_BINARY_SENSOR
-  void set_content(binary_sensor::BinarySensor *content);
-#endif
-#ifdef USE_TEXT_SENSOR
-  void set_content(text_sensor::TextSensor *content);
-#endif
-  void set_content(const std::string &content);
-  void set_content(const std::function<std::string()> &content) { dynamic_content_ = content; }
-  void set_default(const std::string &d) { default_ = d; }
-
- private:
-  display::Font *font_ = nullptr;
-  std::function<std::string()> dynamic_content_{};
-  std::string default_;
-};
-
-class ImageElement : public BaseElement {
- public:
-  void draw(display::DisplayBuffer &disp) override;
-  void set_image(display::Image *content) {
-    set_image([content]() { return content; });
-  }
-  void set_image(std::function<display::Image *()> dynamic_content) { dynamic_content_ = dynamic_content; }
-
-#if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
-  void set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon);
-#endif
-
- private:
-  std::function<display::Image *()> dynamic_content_{};
-};
-
-class TemplateElement : public BaseElement {
- public:
-  using drawing_template_t =
-      std::function<void(display::DisplayBuffer &, int, int, int, int, display::TextAlign, Color, Color)>;
-  void draw(display::DisplayBuffer &disp) override;
-  void set_drawer(drawing_template_t drawer) { drawer_ = drawer; }
-
- private:
-  drawing_template_t drawer_;
-};
-
-class ShapeElement : public BaseElement {
- public:
-  enum class ShapeType {
-    CIRCLE,
-    FILLED_CIRCLE,
-    RECTANGLE,
-    FILLED_RECTANGLE,
-    LINE,
-  };
-
-  void draw(display::DisplayBuffer &disp) override;
-  void set_shape_type(ShapeType shapetype) { shapetype_ = shapetype; }
-
- private:
-  ShapeType shapetype_;
-};
 }  // namespace ui_components
 
 }  // namespace esphome

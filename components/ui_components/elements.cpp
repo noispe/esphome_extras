@@ -1,7 +1,5 @@
 #include "elements.h"
 #include "esphome/core/log.h"
-#include <sstream>
-#include <iomanip>
 
 namespace esphome {
 
@@ -45,136 +43,107 @@ void ui_components::BaseElement::position_inside(int *content_x, int *content_y,
   }
 }
 
-void ui_components::TextElement::draw(display::DisplayBuffer &disp) {
-  if (border_) {
-    disp.rectangle(x_, y_, width_, height_, fg_color_);
-    disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
-  }
-  const std::string buffer = dynamic_content_();
-  if (buffer.empty()) {
-    return;
-  }
-  int text_x = x();
-  int text_y = y();
-  int text_width = 0;
-  int text_height = 0;
-  disp.get_text_bounds(x(), y(), buffer.c_str(), font_, display::TextAlign::TOP_LEFT, &text_y, &text_y, &text_width,
-                       &text_height);
-  position_inside(&text_x, &text_y, text_width, text_height);
+void ui_components::Primitives::quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter, int radius,
+                                               Primitives::Corner corner, const Color &color) {
+  int f = 1 - radius;
+  int ddF_x = 1;
+  int ddF_y = -2 * radius;
+  int xN = 0;
+  int yN = radius;
 
-  ESP_LOGD(TAG, "Draw shape at %d,%d - %dx%d", x(), y(), width(), height());
-  ESP_LOGD(TAG, "Draw text at %d,%d - %dx%d", text_x, text_y, text_width, text_height);
-
-  disp.print(text_x, text_y, font_, fg_color_, display::TextAlign::TOP_LEFT, buffer.c_str());
-}
-
-void ui_components::ImageElement::draw(display::DisplayBuffer &disp) {
-  if (border_) {
-    disp.rectangle(x_, y_, width_, height_, fg_color_);
-  }
-  disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
-  display::Image *img = dynamic_content_();
-  if (img == nullptr) {
-    return;
-  }
-  int image_x = x();
-  int image_y = y();
-  int image_width = img->get_width();
-  int image_height = img->get_height();
-  position_inside(&image_x, &image_y, image_width, image_height);
-  ESP_LOGD(TAG, "Draw shape at %d,%d - %dx%d", x(), y(), width(), height());
-  ESP_LOGD(TAG, "Draw image at %d,%d - %dx%d", image_x, image_y, image_width, image_height);
-  disp.image(image_x, image_y, img, fg_color_, bg_color_);
-}
-
-void ui_components::TemplateElement::draw(display::DisplayBuffer &disp) {
-  if (border_) {
-    disp.rectangle(x_, y_, width_, height_, fg_color_);
-  }
-  disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
-  drawer_(disp, x(), y(), width(), height(), alignment_, fg_color_, bg_color_);
-}
-
-void ui_components::UIComponents::draw(display::DisplayBuffer &disp) const {
-  for (auto &c : content_) {
-    c->draw(disp);
-  }
-}
-
-void ui_components::ShapeElement::draw(display::DisplayBuffer &disp) {
-  if (border_) {
-    disp.rectangle(x_, y_, width_, height_, fg_color_);
-  }
-  disp.filled_rectangle(x(), y(), width(), height(), bg_color_);
-
-  switch (shapetype_) {
-    case ShapeType::CIRCLE:
-      disp.circle(x() + (width() / 2), y() + (height() / 2), std::min(height(), width()), fg_color_);
-      break;
-    case ShapeType::FILLED_CIRCLE:
-      disp.filled_circle(x() + (width() / 2), y() + (height() / 2), std::min(height(), width()), fg_color_);
-      break;
-    case ShapeType::RECTANGLE:
-      disp.rectangle(x(), y(), width(), height(), fg_color_);
-      break;
-    case ShapeType::FILLED_RECTANGLE:
-      disp.filled_rectangle(x(), y(), width(), height(), fg_color_);
-      break;
-    case ShapeType::LINE:
-      if (height_ == 0) {
-        disp.horizontal_line(x(), y(), width(), fg_color_);
-      } else if (width_ == 0) {
-        disp.vertical_line(x(), y(), height(), fg_color_);
-      } else {
-        disp.line(x(), y(), x() + width(), y() + height(), fg_color_);
-      }
-      break;
-    default:
-      break;
-  }
-}
-
-#ifdef USE_SENSOR
-void ui_components::TextElement::set_content(sensor::Sensor *content) {
-  set_content([this, content]() {
-    if (content->has_state()) {
-      std::ostringstream ss;
-      ss << std::setw(content->get_accuracy_decimals()) << std::fixed << content->get_state()
-         << content->get_unit_of_measurement();
-      return ss.str();
+  while (xN < yN) {
+    if (f >= 0) {
+      yN--;
+      ddF_y += 2;
+      f += ddF_y;
     }
-    return this->default_;
-  });
-}
-#endif
-#ifdef USE_TEXT_SENSOR
-void ui_components::TextElement::set_content(text_sensor::TextSensor *content) {
-  set_content([this, content]() { return content->has_state() ? content->get_state() : this->default_; });
-}
-#endif
-#ifdef USE_BINARY_SENSOR
-void ui_components::TextElement::set_content(binary_sensor::BinarySensor *content) {
-  set_content([this, content]() {
-    if (content->has_state()) {
-      return content->state ? std::string{"ON"} : std::string{"OFF"};
+    xN++;
+    ddF_x += 2;
+    f += ddF_x;
+    if (corner & Corner::BOTTOM_RIGHT) {
+      disp.draw_pixel_at(xCenter + xN, yCenter + yN, color);
+      disp.draw_pixel_at(xCenter + yN, yCenter + xN, color);
     }
-    return this->default_;
-  });
+    if (corner & Corner::TOP_RIGHT) {
+      disp.draw_pixel_at(xCenter + xN, yCenter - yN, color); 
+      disp.draw_pixel_at(xCenter + yN, yCenter - xN, color);
+    }
+    if (corner & Corner::BOTTOM_LEFT) {
+      disp.draw_pixel_at(xCenter - yN, yCenter + xN, color);  
+      disp.draw_pixel_at(xCenter - xN, yCenter + yN, color);
+    }
+    if (corner & Corner::TOP_LEFT) {
+      disp.draw_pixel_at(xCenter - yN, yCenter - xN, color);  
+      disp.draw_pixel_at(xCenter - xN, yCenter - yN, color);
+    }
+  }
 }
-#endif
 
-void ui_components::TextElement::set_content(const std::string &content) {
-  set_content([content]() { return content; });
-}
-#if defined(USE_TEXT_SENSOR) && defined(USE_ICON_PROVIDER)
-void ui_components::ImageElement::set_image(text_sensor::TextSensor *content, icon_provider::IconProvider *icon) {
-  set_image([content, icon]() -> display::Image* {
-    if (content->has_state()) {
-      return icon->get_icon(content->get_state());
+void ui_components::Primitives::filled_quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter,
+                                                      int radius, int corner, int offset, const Color &color) {
+  int16_t f = 1 - radius;
+  int16_t ddF_x = 1;
+  int16_t ddF_y = -2 * radius;
+  int16_t xN = 0;
+  int16_t yN = radius;
+  int16_t px = xN;
+  int16_t py = yN;
+
+  offset++;  // Avoid some +1's in the loop
+
+  while (xN < yN) {
+    if (f >= 0) {
+      yN--;
+      ddF_y += 2;
+      f += ddF_y;
     }
-    return nullptr;
-  });
+    xN++;
+    ddF_x += 2;
+    f += ddF_x;
+    if (xN < (yN + 1)) {
+      if (corner & 1)
+        disp.vertical_line(xCenter + xN, yCenter - yN, 2 * yN + offset, color);
+      if (corner & 2)
+        disp.vertical_line(xCenter - xN, yCenter - yN, 2 * yN + offset, color);
+    }
+    if (yN != py) {
+      if (corner & 1)
+        disp.vertical_line(xCenter + py, yCenter - px, 2 * px + offset, color);
+      if (corner & 2)
+        disp.vertical_line(xCenter - py, yCenter - px, 2 * px + offset, color);
+      py = yN;
+    }
+    px = xN;
+  }
 }
-#endif
+
+void ui_components::Primitives::round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height,
+                                           int radius, const Color &color) {
+  int max_radius = round(((width < height) ? width : height) / 2);  // 1/2 minor axis rounded
+  if (radius > max_radius) {
+    radius = max_radius;
+  }
+  disp.horizontal_line(x + radius, y, width - 2 * radius, color);               // Top
+  disp.horizontal_line(x + radius, y + height - 1, width - 2 * radius, color);  // Bottom
+  disp.vertical_line(x, y + radius, height - 2 * radius, color);                // Left
+  disp.vertical_line(x + width - 1, y + radius, height - 2 * radius, color);    // Right
+  // draw four corners
+  quarter_circle(disp, x + radius, y + radius, radius, Corner::TOP_LEFT, color);
+  quarter_circle(disp, x + width - radius - 1, y + radius, radius, Corner::TOP_RIGHT, color);
+  quarter_circle(disp, x + width - radius - 1, y + height - radius - 1, radius, Corner::BOTTOM_RIGHT, color);
+  quarter_circle(disp, x + radius, y + height - radius - 1, radius, Corner::BOTTOM_LEFT, color);
+}
+
+void ui_components::Primitives::filled_round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height,
+                                                  int radius, const Color &color) {
+  int max_radius = round(((width < height) ? width : height) / 2);  // 1/2 minor axis rounded
+  if (radius > max_radius) {
+    radius = max_radius;
+  }
+  disp.filled_rectangle(x + radius, y, width - 2 * radius, height, color);
+  // draw four corners
+  filled_quarter_circle(disp, x + width - radius - 1, y + radius, radius, 1, height - 2 * radius - 1, color);
+  filled_quarter_circle(disp, x + radius, y + radius, radius, 2, height - 2 * radius - 1, color);
+}
 
 }  // namespace esphome

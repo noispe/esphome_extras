@@ -28,37 +28,38 @@ image:
 
 ui_components:
   id: gui_1
+  font: text_normal
+
   elements:
     - image:
         image: image_1
-        x: 3
-        y: 12
+        x: 4
+        y: 5
     - image:
         image: !lambda |
           return id(image_1);
-        x: 3
-        y: 12
+        x: 6
+        y: 7
     - image:
-        text_sensor:
-          sensor: version_string
+        icon:
+          entity_id: version_string
           icons: icon_1
-        x: 3
-        y: 12
+        x: 8
+        y: 9
     - text:
         x: 3
         y: 12
         text: !lambda |
           return "this is a test";
+    - text:
+        x: 3
+        y: 12
+        text: foobar
         font: text_normal
     - text:
         x: 3
         y: 12
-        text: this is a test;
-        font: text_normal
-    - text:
-        x: 3
-        y: 12
-        text_sensor: version_string
+        entity_id: version_string
         default: "No data"
         font: text_normal
     - template:
@@ -76,6 +77,7 @@ ui_components:
         width: 10
         height: 15
         shape: LINE
+        radius: 3
 
 text_sensor:
   - platform: wifi_info
