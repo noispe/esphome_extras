@@ -1,6 +1,8 @@
 #include "axp192_output.h"
 #include "esphome/core/log.h"
 
+#define TAG this->get_component_source()
+
 namespace esphome {
 namespace axp192 {
 
