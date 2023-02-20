@@ -15,9 +15,6 @@ class Axp192Sensor;
 class Axp192Switch;
 class Axp192Output;
 namespace detail {
-template<typename T, T InMin, T InMax, uint8_t OutMin, uint8_t OutMax> uint8_t constrained_remap(T value) {
-  return uint8_t(remap<T, T>(clamp<T>(value, InMin, InMax), InMin, InMax, OutMin, OutMax));
-}
 
 static constexpr size_t find_register_bit(size_t size, size_t index, size_t bit) {
   return 1U << (bit + ((size - index - 1) * 8));
@@ -32,7 +29,57 @@ template<typename E> static std::string to_hex(const E value) {
   return format_hex_pretty(static_cast<typename std::underlying_type<E>::type>(value));
 }
 
+template<typename ValType, typename RegType> struct RemapRanges {
+  ValType const min_val;
+  ValType const max_val;
+  RegType const min_reg;
+  RegType const max_reg;
+
+  ValType from_register(RegType value) const {
+    return remap<ValType, RegType>(value, min_reg, max_reg, min_val, max_val);
+  }
+  RegType to_register(ValType value) const {
+    return remap<RegType, ValType>(value, min_val, max_val, min_reg, max_reg);
+  }
+
+  RegType level_to_register(float level) const { return remap<RegType, float>(level, 0.0f, 1.0f, min_reg, max_reg); }
+  float level_from_register(RegType value) const { return remap<float, RegType>(value, min_reg, max_reg, 0.0f, 1.0f); }
+};
+
 }  // namespace detail
+
+// 9.7
+struct AdcRanges {
+  static detail::RemapRanges<float, uint16_t> const BATTERY_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const BATTERY_DISCHARGE_CURRENT;
+  static detail::RemapRanges<float, uint16_t> const BATTERY_CHARGE_CURRENT;
+  static detail::RemapRanges<float, uint16_t> const ACIN_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const ACIN_CURRENT;
+  static detail::RemapRanges<float, uint16_t> const VBUS_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const VBUS_CURRENT;
+  static detail::RemapRanges<float, uint16_t> const AXP_TEMP;
+  static detail::RemapRanges<float, uint16_t> const BATTERY_TEMP;
+  static detail::RemapRanges<float, uint16_t> const APS_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const TS_PIN_VOLTAGE;  // TODO
+  static detail::RemapRanges<float, uint16_t> const GPIO0_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const GPIO1_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const GPIO2_VOLTAGE;
+  static detail::RemapRanges<float, uint16_t> const GPIO3_VOLTAGE;
+};
+
+struct OutputRanges {
+  // 9.11.11
+  static detail::RemapRanges<float, uint8_t> const DCDC2_VOLTAGE;
+  // 9.11.13
+  static detail::RemapRanges<float, uint8_t> const DCDC1_VOLTAGE;
+  // 9.11.14
+  static detail::RemapRanges<float, uint8_t> const DCDC3_VOLTAGE;
+  // 9.11.15
+  static detail::RemapRanges<float, uint8_t> const LDO2_VOLTAGE;
+  static detail::RemapRanges<float, uint8_t> const LDO3_VOLTAGE;
+  // 9.11.39
+  static detail::RemapRanges<float, uint8_t> const GPIO_LDO_VOLTAGE;
+};
 
 // 9.11.1
 enum class RegisterLocations : uint8_t {
@@ -134,7 +181,15 @@ enum class RegisterLocations : uint8_t {
   BATTERY_COULUMB_COUTER_CONTROL = 0xB8
 };
 
-enum class OutputPin : uint8_t { OUTPUT_LDO2, OUTPUT_LDO3, OUTPUT_DCDC1, OUTPUT_DCDC3, OUTPUT_LDOIO0 };
+enum class OutputPin : uint8_t {
+  OUTPUT_RTC,
+  OUTPUT_LDO2,
+  OUTPUT_LDO3,
+  OUTPUT_DCDC1,
+  OUTPUT_DCDC2,
+  OUTPUT_DCDC3,
+  OUTPUT_LDOIO0,
+};
 
 // 32bit int - <reg 00><reg 1> MSB -> LSB
 
@@ -208,7 +263,13 @@ enum class SensorType : uint8_t {
   GPIO0_VOLTAGE,
   GPIO1_VOLTAGE,
   GPIO2_VOLTAGE,
-  GPIO3_VOLTAGE
+  GPIO3_VOLTAGE,
+  DCDC1_VOLTAGE,
+  DCDC2_VOLTAGE,
+  DCDC3_VOLTAGE,
+  LDO2_VOLTAGE,
+  LDO3_VOLTAGE,
+  GPIO_LDO_VOLTAGE,
 };
 
 enum class VoffVoltage : uint8_t {
@@ -248,14 +309,11 @@ enum class VBusHoldVoltageLimit : uint8_t {
   HOLD_4400MV = 0b00100000,
   HOLD_4500MV = 0b00101000,
   HOLD_4600MV = 0b00110000,
-  HOLD_4700MV = 0b00111000
+  HOLD_4700MV = 0b00111000,
 };
 
-enum class VBusHoldVoltageLimited : uint8_t { VOLTAGE_NOT_LIMITED = 0b00000000, VOLTAGE_LIMITED = 0b01000000 };
 
 enum class VBusIpsout : uint8_t { IPSOUT_NOT_MANAGED = 0b00000000, IPSOUT_MANAGED = 0b10000000 };
-
-enum class VBusHoldCurrentLimited : uint8_t { CURRENT_NOT_LIMITED = 0b00000000, CURRENT_LIMITED = 0b00000010 };
 
 enum class VBusHoldCurrentLimit : uint8_t { CURRENT_LIMIT_500MA = 0b0000, CURRENT_LIMIT_100MA = 0b0001 };
 
@@ -291,13 +349,12 @@ class Axp192Component : public i2c::I2CDevice, public PollingComponent {
   void configure_battery();
   bool configure_axp();
 
+// Just sets the register map value
   void set_voff(VoffVoltage voff);
   void set_charge_voltage(ChargeVoltage voltage);
   void set_charge_current(ChargeCurrent current);
   void set_vbus_ipsout(VBusIpsout val);
-  void set_vbus_hold_current_limited(VBusHoldCurrentLimited val);
   void set_vbus_hold_current_limit(VBusHoldCurrentLimit val);
-  void set_vbus_hold_voltage_limited(VBusHoldVoltageLimited val);
   void set_vbus_hold_voltage_limit(VBusHoldVoltageLimit val);
   void set_disable_rtc(bool disable_rtc);
   void set_disable_ldo2(bool disable_ldo2);
@@ -305,33 +362,42 @@ class Axp192Component : public i2c::I2CDevice, public PollingComponent {
   void set_disable_dcdc1(bool disable_dcdc1);
   void set_disable_dcdc2(bool disable_dcdc2);
   void set_disable_dcdc3(bool disable_dcdc3);
-  void set_dcdc1_voltage(uint32_t dcdc1_voltage);
-  void set_dcdc2_voltage(uint32_t dcdc2_voltage);
-  void set_dcdc3_voltage(uint32_t dcdc3_voltage);
-  void set_ldo2_voltage(uint32_t ldo2_voltage);
-  void set_ldo3_voltage(uint32_t ldo3_voltage);
-  void set_ldoio0_voltage(uint32_t ldoio0_voltage);
+  void set_dcdc1_voltage(float dcdc1_voltage);
+  void set_dcdc2_voltage(float dcdc2_voltage);
+  void set_dcdc3_voltage(float dcdc3_voltage);
+  void set_ldo2_voltage(float ldo2_voltage);
+  void set_ldo3_voltage(float ldo3_voltage);
+  void set_ldoio0_voltage(float ldoio0_voltage);
   void set_ldoio0_mode(LDOio0Control mode);
 
+// Loads the current value from the register into register map
+// Sets the new value in the register map
+// Saves the register map value to the register
+  bool configure_rtc(bool enable);
   bool configure_ldo2(bool enable);
   bool configure_ldo3(bool enable);
   bool configure_dcdc1(bool enable);
   bool configure_dcdc2(bool enable);
   bool configure_dcdc3(bool enable);
   bool configure_ldoio0(bool enable);
-  bool configure_ldo2_voltage(float level);
-  bool configure_ldo3_voltage(float level);
-  bool configure_dcdc1_voltage(float level);
-  bool configure_dcdc3_voltage(float level);
-  bool configure_ldoio0_voltage(float level);
+  bool configure_ldo2_voltage(float volts);
+  bool configure_ldo3_voltage(float volts);
+  bool configure_dcdc1_voltage(float volts);
+  bool configure_dcdc3_voltage(float volts);
+  bool configure_ldoio0_voltage(float volts);
+
+// Loads the current value from the register into register map, returns the state
+  bool get_rtc_enabled();
   bool get_ldo2_enabled();
   bool get_ldo3_enabled();
   bool get_dcdc1_enabled();
+  bool get_dcdc2_enabled();
   bool get_dcdc3_enabled();
   bool get_ldoio0_enabled();
   float get_ldo2_voltage();
   float get_ldo3_voltage();
   float get_dcdc1_voltage();
+  float get_dcdc2_voltage();
   float get_dcdc3_voltage();
   float get_ldoio0_voltage();
 
@@ -414,11 +480,11 @@ class Axp192Component : public i2c::I2CDevice, public PollingComponent {
 
   void publish_helper_(IrqType type, bool state);
   void publish_helper_(MonitorType type, bool state);
+
 #ifdef USE_BINARY_SENSOR
   void do_irqs_();
   uint32_t last_irq_buffer_ = 0xFF;
 #endif
-
 };
 
 }  // namespace axp192

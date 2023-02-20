@@ -42,14 +42,37 @@ void log_register_bits(const char *const tag, RegisterLocations reg, const std::
 }
 
 constexpr uint16_t encode_12bit(uint8_t msb, uint8_t lsb) {
-  return (static_cast<uint16_t>(msb) << 4) | (static_cast<uint16_t>(lsb));
+  return (static_cast<uint16_t>(msb) << 4) | (static_cast<uint16_t>(lsb) & 0x0F);
 }
 
 constexpr uint16_t encode_13bit(uint8_t msb, uint8_t lsb) {
-  return (static_cast<uint16_t>(msb) << 4) | (static_cast<uint16_t>(lsb));
+  return (static_cast<uint16_t>(msb) << 5) | (static_cast<uint16_t>(lsb) & 0x1F);
 }
 
 }  // namespace detail
+
+detail::RemapRanges<float,uint16_t> const AdcRanges::BATTERY_VOLTAGE = {0.0f, 4.5045f,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::BATTERY_DISCHARGE_CURRENT = {0, 4.095,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::BATTERY_CHARGE_CURRENT = {0, 4.095,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::ACIN_VOLTAGE = {0, 6.9615,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::ACIN_CURRENT = {0, 2.5594,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::VBUS_VOLTAGE = {0, 6.9615,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::VBUS_CURRENT = {0, 1.5356,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::AXP_TEMP = {-144.7, 264.8,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::BATTERY_TEMP = {-144.7, 264.8,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::APS_VOLTAGE = {0, 5.733,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::TS_PIN_VOLTAGE = {0, 3.276,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::GPIO0_VOLTAGE = {0, 2.0475,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::GPIO1_VOLTAGE = {0, 2.0475,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::GPIO2_VOLTAGE = {0, 2.0475,0x00,0x0FFF};
+detail::RemapRanges<float,uint16_t> const AdcRanges::GPIO3_VOLTAGE = {0, 2.0475,0x00,0x0FFF};
+
+detail::RemapRanges<float,uint8_t> const OutputRanges::DCDC2_VOLTAGE = {0.7, 2.275, 0x00, 0x3F};
+detail::RemapRanges<float,uint8_t> const OutputRanges::DCDC1_VOLTAGE = {0.7, 3.5, 0x00, 0x7F};
+detail::RemapRanges<float,uint8_t> const OutputRanges::DCDC3_VOLTAGE = {0.7, 3.5, 0x00, 0x7F};
+detail::RemapRanges<float,uint8_t> const OutputRanges::LDO2_VOLTAGE = {1.8, 3.3, 0x00, 0x0F};
+detail::RemapRanges<float,uint8_t> const OutputRanges::LDO3_VOLTAGE = {1.8, 3.3, 0x00, 0x0F};
+detail::RemapRanges<float,uint8_t> const OutputRanges::GPIO_LDO_VOLTAGE = {1.8, 3.3, 0x0F, 0xFF};
 
 void Axp192Component::setup() {
   if (!this->configure_axp()) {
@@ -83,56 +106,61 @@ void Axp192Component::update() {
 
 #ifdef USE_BINARY_SENSOR
   if (!this->monitors_.empty()) {
-    {
-      auto buffer = this->read_bytes<4>(0x0);
-      if (buffer.has_value()) {
-        ESP_LOGV(this->get_component_source(), "Binary sensors");
-        detail::log_register_bits(this->get_component_source(), RegisterLocations::POWER_SUPPLY_STATUS, buffer.value());
-
-        // power supply
-        bool acin_present = (buffer.value().at(0) & 0b10000000) != 0;
-
-        this->publish_helper_(MonitorType::ACIN_PRESENT, acin_present);
-
-        bool acin_valid = (buffer.value().at(0) & 0b01000000) != 0;
-        this->publish_helper_(MonitorType::ACIN_VALID, !acin_valid);
-
-        bool vbus_present = (buffer.value().at(0) & 0b00100000) != 0;
-        this->publish_helper_(MonitorType::VBUS_PRESENT, vbus_present);
-
-        bool vbus_valid = (buffer.value().at(0) & 0b00010000) != 0;
-        this->publish_helper_(MonitorType::VBUS_VALID, !vbus_valid);
-
-        bool vhold_over = (buffer.value().at(0) & 0b00001000) != 0;
-        this->publish_helper_(MonitorType::VBUS_ABOVE, vhold_over);
-
-        bool charge_state = (buffer.value().at(0) & 0b00000100) != 0;
-        this->publish_helper_(MonitorType::BATTERY_CURRENT_DIRECTION, !charge_state);
-
-        bool acin_vbus_short = (buffer.value().at(0) & 0b00000010) != 0;
-        this->publish_helper_(MonitorType::ACIN_VBUS_SHORT, acin_vbus_short);
-
-        bool acin_vbus_trigger = (buffer.value().at(0) & 0b00000001) != 0;
-        this->publish_helper_(MonitorType::ACIN_VBUS_TRIGGER_BOOT, acin_vbus_trigger);
-
-        // battery
-        bool axp_overtemp = (buffer.value().at(1) & 0b10000000) != 0;
-        this->publish_helper_(MonitorType::AXP_OVER_TEMP, axp_overtemp);
-
-        bool charging = (buffer.value().at(1) & 0b01000000) != 0;
-        this->publish_helper_(MonitorType::CHARGE_INDICATE, charging);
-
-        bool battery_present = (buffer.value().at(1) & 0b00100000) != 0;
-        this->publish_helper_(MonitorType::BATTERY_PRESENT, battery_present);
-
-        bool battery_active = (buffer.value().at(1) & 0b00001000) != 0;
-        this->publish_helper_(MonitorType::BATTERY_ACTIVE, battery_active);
-
-        bool current_under = (buffer.value().at(1) & 0b00000100) != 0;
-        this->publish_helper_(MonitorType::CHARGE_CURRENT_LOW, current_under);
+    auto buffer = this->read_bytes<4>(0x0);
+    if (buffer.has_value()) {
+      ESP_LOGV(this->get_component_source(), "Binary sensors");
+      detail::log_register_bits(this->get_component_source(), RegisterLocations::POWER_SUPPLY_STATUS, buffer.value());
+      auto bits = encode_uint32(buffer.value().at(0), buffer.value().at(1), buffer.value().at(2), buffer.value().at(3));
+      for (auto monitor : this->monitors_) {
+        auto val = (detail::to_int(monitor.first) & bits) != 0;
+        this->publish_helper_(monitor.first, val);
       }
     }
   }
+  /*
+    this->publish_helper_(MonitorType::ACIN_PRESENT, (bits & detail::to_int(MonitorType::ACIN_PRESENT) != 0);
+
+    bool acin_valid = (buffer.value().at(0) & 0b01000000) != 0;
+    this->publish_helper_(MonitorType::ACIN_VALID, !acin_valid);
+
+    bool vbus_present = (buffer.value().at(0) & 0b00100000) != 0;
+    this->publish_helper_(MonitorType::VBUS_PRESENT, vbus_present);
+
+    bool vbus_valid = (buffer.value().at(0) & 0b00010000) != 0;
+    this->publish_helper_(MonitorType::VBUS_VALID, !vbus_valid);
+
+    bool vhold_over = (buffer.value().at(0) & 0b00001000) != 0;
+    this->publish_helper_(MonitorType::VBUS_ABOVE, vhold_over);
+
+    bool charge_state = (buffer.value().at(0) & 0b00000100) != 0;
+    this->publish_helper_(MonitorType::BATTERY_CURRENT_DIRECTION, !charge_state);
+
+    bool acin_vbus_short = (buffer.value().at(0) & 0b00000010) != 0;
+    this->publish_helper_(MonitorType::ACIN_VBUS_SHORT, acin_vbus_short);
+
+    bool acin_vbus_trigger = (buffer.value().at(0) & 0b00000001) != 0;
+    this->publish_helper_(MonitorType::ACIN_VBUS_TRIGGER_BOOT, acin_vbus_trigger);
+
+    // battery
+    bool axp_overtemp = (buffer.value().at(1) & 0b10000000) != 0;
+    this->publish_helper_(MonitorType::AXP_OVER_TEMP, axp_overtemp);
+
+    bool charging = (buffer.value().at(1) & 0b01000000) != 0;
+    this->publish_helper_(MonitorType::CHARGE_INDICATE, charging);
+
+    bool battery_present = (buffer.value().at(1) & 0b00100000) != 0;
+    this->publish_helper_(MonitorType::BATTERY_PRESENT, battery_present);
+
+    bool battery_active = (buffer.value().at(1) & 0b00001000) != 0;
+    this->publish_helper_(MonitorType::BATTERY_ACTIVE, battery_active);
+
+    bool current_under = (buffer.value().at(1) & 0b00000100) != 0;
+    this->publish_helper_(MonitorType::CHARGE_CURRENT_LOW, current_under);
+  }
+}
+}
+*/
+
 #endif
 #ifdef USE_SENSOR
   if (!this->sensors_.empty()) {
@@ -144,20 +172,19 @@ void Axp192Component::update() {
         detail::log_register_bits(this->get_component_source(), RegisterLocations::ACIN_VOLTAGE_HIGH8, buffer.value());
 
         auto acin_voltage = detail::encode_12bit(buffer.value().at(0), buffer.value().at(1));
-        this->publish_helper_(SensorType::ACIN_VOLTAGE, remap<float, uint16_t>(acin_voltage, 0x0, 0xFFF, 0, 6.9615));
+        this->publish_helper_(SensorType::ACIN_VOLTAGE,AdcRanges::ACIN_VOLTAGE.from_register(acin_voltage));
 
         auto acin_current = detail::encode_12bit(buffer.value().at(2), buffer.value().at(3));
-        this->publish_helper_(SensorType::ACIN_CURRENT, remap<float, uint16_t>(acin_current, 0x0, 0xFFF, 0, 2.5594));
+        this->publish_helper_(SensorType::ACIN_CURRENT,AdcRanges::ACIN_CURRENT.from_register(acin_current));
 
         auto vbus_voltage = detail::encode_12bit(buffer.value().at(4), buffer.value().at(5));
-        this->publish_helper_(SensorType::VBUS_VOLTAGE, remap<float, uint16_t>(vbus_voltage, 0x0, 0xFFF, 0, 6.9615));
+        this->publish_helper_(SensorType::VBUS_VOLTAGE,AdcRanges::VBUS_VOLTAGE.from_register(vbus_voltage));
 
         auto vbus_current = detail::encode_12bit(buffer.value().at(6), buffer.value().at(7));
-        this->publish_helper_(SensorType::VBUS_CURRENT, remap<float, uint16_t>(vbus_current, 0x0, 0xFFF, 0, 1.5356));
+        this->publish_helper_(SensorType::VBUS_CURRENT,AdcRanges::VBUS_CURRENT.from_register(vbus_current));
 
         auto axp_internal_temp = detail::encode_12bit(buffer.value().at(8), buffer.value().at(9));
-        this->publish_helper_(SensorType::AXP_TEMP,
-                              remap<float, uint16_t>(axp_internal_temp, 0x0, 0xFFF, -144.7, 264.8));
+        this->publish_helper_(SensorType::AXP_TEMP,AdcRanges::AXP_TEMP.from_register(axp_internal_temp));
       }
     }
 
@@ -166,20 +193,19 @@ void Axp192Component::update() {
       if (buffer.has_value()) {
         detail::log_register_bits(this->get_component_source(), RegisterLocations::BATTERY_TEMP_HIGH8, buffer.value());
         auto battery_temp = detail::encode_12bit(buffer.value().at(0), buffer.value().at(1));
-        this->publish_helper_(SensorType::BATTERY_TEMP,
-                              remap<float, uint16_t>(battery_temp, 0x0, 0xFFF, -144.7, 264.8));
+        this->publish_helper_(SensorType::BATTERY_TEMP,AdcRanges::BATTERY_TEMP.from_register(battery_temp));
 
         auto gpio0_voltage = detail::encode_12bit(buffer.value().at(2), buffer.value().at(3));
-        this->publish_helper_(SensorType::GPIO0_VOLTAGE, remap<float, uint16_t>(gpio0_voltage, 0x0, 0xFFF, 0, 2.0475));
+        this->publish_helper_(SensorType::GPIO0_VOLTAGE,AdcRanges::GPIO0_VOLTAGE.from_register(gpio0_voltage));;
 
         auto gpio1_voltage = detail::encode_12bit(buffer.value().at(4), buffer.value().at(5));
-        this->publish_helper_(SensorType::GPIO1_VOLTAGE, remap<float, uint16_t>(gpio1_voltage, 0x0, 0xFFF, 0, 2.0475));
+        this->publish_helper_(SensorType::GPIO1_VOLTAGE,AdcRanges::GPIO1_VOLTAGE.from_register(gpio1_voltage));
 
         auto gpio2_voltage = detail::encode_12bit(buffer.value().at(6), buffer.value().at(7));
-        this->publish_helper_(SensorType::GPIO2_VOLTAGE, remap<float, uint16_t>(gpio2_voltage, 0x0, 0xFFF, 0, 2.0475));
+        this->publish_helper_(SensorType::GPIO2_VOLTAGE,AdcRanges::GPIO2_VOLTAGE.from_register(gpio2_voltage));
 
         auto gpio3_voltage = detail::encode_12bit(buffer.value().at(8), buffer.value().at(9));
-        this->publish_helper_(SensorType::GPIO3_VOLTAGE, remap<float, uint16_t>(gpio3_voltage, 0x0, 0xFFF, 0, 2.0475));
+        this->publish_helper_(SensorType::GPIO3_VOLTAGE,AdcRanges::GPIO3_VOLTAGE.from_register(gpio3_voltage));
       }
     }
 
@@ -193,18 +219,18 @@ void Axp192Component::update() {
 
         auto battery_voltage = detail::encode_12bit(buffer.value().at(8), buffer.value().at(9));
         this->publish_helper_(SensorType::BATTERY_VOLTAGE,
-                              remap<float, uint16_t>(battery_voltage, 0x0, 0xFFF, 0, 4.5045));
+                              AdcRanges::BATTERY_VOLTAGE.from_register(battery_voltage));
 
         auto battery_charge_current = detail::encode_13bit(buffer.value().at(10), buffer.value().at(11));
-        this->publish_helper_(SensorType::BATTERY_CHARGE_CURRENT,
-                              remap<float, uint16_t>(battery_charge_current, 0x0, 0xFFF, 0, 4.095));
+        this->publish_helper_(
+            SensorType::BATTERY_CHARGE_CURRENT,AdcRanges::BATTERY_CHARGE_CURRENT.from_register(battery_charge_current));
 
         auto battery_discharge_current = detail::encode_13bit(buffer.value().at(12), buffer.value().at(13));
-        this->publish_helper_(SensorType::BATTERY_DISCHARGE_CURRENT,
-                              remap<float, uint16_t>(battery_discharge_current, 0x0, 0xFFF, 0, 4.095));
+        this->publish_helper_(
+            SensorType::BATTERY_DISCHARGE_CURRENT,AdcRanges::BATTERY_DISCHARGE_CURRENT.from_register(battery_discharge_current));
 
         auto aps_voltage = detail::encode_12bit(buffer.value().at(14), buffer.value().at(15));
-        this->publish_helper_(SensorType::APS_VOLTAGE, remap<float, uint16_t>(aps_voltage, 0x0, 0xFFF, 0, 5.733));
+        this->publish_helper_(SensorType::APS_VOLTAGE,AdcRanges::APS_VOLTAGE.from_register(aps_voltage));
       }
     }
   }
@@ -276,27 +302,22 @@ void Axp192Component::set_charge_voltage(ChargeVoltage voltage) {
 }
 
 void Axp192Component::set_charge_current(ChargeCurrent current) {
-  this->update_register(RegisterLocations::CHARGE_CONTROL_REG1, detail::to_int(current), 0b11110000);
+  this->update_register(RegisterLocations::CHARGE_CONTROL_REG1, detail::to_int(current), 0b11111000);
 }
 
 void Axp192Component::set_vbus_ipsout(VBusIpsout val) {
   this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, detail::to_int(val), 0b01111111);
 }
 
-void Axp192Component::set_vbus_hold_current_limited(VBusHoldCurrentLimited val) {
-  this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, detail::to_int(val), 0b11111101);
-}
 
 void Axp192Component::set_vbus_hold_current_limit(VBusHoldCurrentLimit val) {
   this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, detail::to_int(val), 0b11111110);
-}
-
-void Axp192Component::set_vbus_hold_voltage_limited(VBusHoldVoltageLimited val) {
-  this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, detail::to_int(val), 0b10111111);
+  this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, 0b00000010, 0b11111101);
 }
 
 void Axp192Component::set_vbus_hold_voltage_limit(VBusHoldVoltageLimit val) {
   this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, detail::to_int(val), 0b11000111);
+  this->update_register(RegisterLocations::VBUS_IPSOUT_ACCESS, 0b01000000, 0b10111111);
 }
 
 void Axp192Component::set_disable_rtc(bool disable_rtc) {
@@ -319,29 +340,28 @@ void Axp192Component::set_disable_dcdc3(bool disable_dcdc3) {
   this->update_register(RegisterLocations::DCDC13_LDO23_CONTROL, disable_dcdc3 ? 0x0 : 0b00000001, 0b11111110);
 }
 
-void Axp192Component::set_dcdc1_voltage(uint32_t dcdc1_voltage) {
+void Axp192Component::set_dcdc1_voltage(float dcdc1_voltage) {
   this->update_register(RegisterLocations::DCDC1_VOLTAGE,
-                        detail::constrained_remap<uint32_t, 700, 3500, 0x0, 0x7F>(dcdc1_voltage), 0b10000000);
+                         OutputRanges::DCDC1_VOLTAGE.to_register(dcdc1_voltage), 0b10000000);
 }
 
-void Axp192Component::set_dcdc3_voltage(uint32_t dcdc3_voltage) {
-  this->update_register(RegisterLocations::DCDC3_VOLTAGE,
-                        detail::constrained_remap<uint32_t, 700, 3500, 0x0, 0x7F>(dcdc3_voltage), 0b10000000);
+void Axp192Component::set_dcdc3_voltage(float dcdc3_voltage) {
+  this->update_register(RegisterLocations::DCDC3_VOLTAGE, OutputRanges::DCDC3_VOLTAGE.to_register(dcdc3_voltage),
+                        0b10000000);
 }
 
-void Axp192Component::set_ldo2_voltage(uint32_t ldo2_voltage) {
-  this->update_register(RegisterLocations::LDO23_VOLTAGE,
-                        (detail::constrained_remap<int, 1800, 3300, 0x0, 0x0F>(ldo2_voltage) << 4), 0b00001111);
+void Axp192Component::set_ldo2_voltage(float ldo2_voltage) {
+  this->update_register(RegisterLocations::LDO23_VOLTAGE,OutputRanges::LDO2_VOLTAGE.to_register(ldo2_voltage)
+                         << 4, 0b00001111);
 }
 
-void Axp192Component::set_ldo3_voltage(uint32_t ldo3_voltage) {
-  this->update_register(RegisterLocations::LDO23_VOLTAGE,
-                        detail::constrained_remap<uint32_t, 1800, 3300, 0x0, 0x0F>(ldo3_voltage), 0b11110000);
+void Axp192Component::set_ldo3_voltage(float ldo3_voltage) {
+  this->update_register(RegisterLocations::LDO23_VOLTAGE,OutputRanges::LDO3_VOLTAGE.to_register(ldo3_voltage),
+                        0b11110000);
 }
 
-void Axp192Component::set_ldoio0_voltage(uint32_t ldoio0_voltage) {
-  this->update_register(RegisterLocations::GPIO_LDO_VOLTAGE,
-                        (detail::constrained_remap<uint32_t, 1800, 3300, 0x0, 0x0F>(ldoio0_voltage) << 4), 0b00001111);
+void Axp192Component::set_ldoio0_voltage(float ldoio0_voltage) {
+  this->update_register(RegisterLocations::GPIO_LDO_VOLTAGE, OutputRanges::GPIO_LDO_VOLTAGE.to_register(ldoio0_voltage) << 4, 0b00001111);
 }
 
 void Axp192Component::set_ldoio0_mode(LDOio0Control mode) {
@@ -458,35 +478,35 @@ bool Axp192Component::save_register(RegisterLocations reg) {
 }
 
 bool Axp192Component::configure_ldo2_voltage(float level) {
-  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, 1800, 3300);
+  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, OutputRanges::LDO2_VOLTAGE.min_val, OutputRanges::LDO2_VOLTAGE.max_val);
   this->load_register(RegisterLocations::LDO23_VOLTAGE);
   this->set_ldo2_voltage(scaled);
   return this->save_register(RegisterLocations::LDO23_VOLTAGE);
 }
 
 bool Axp192Component::configure_ldo3_voltage(float level) {
-  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, 1800, 3300);
+  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, OutputRanges::LDO3_VOLTAGE.min_val, OutputRanges::LDO3_VOLTAGE.max_val);
   this->load_register(RegisterLocations::LDO23_VOLTAGE);
   this->set_ldo3_voltage(scaled);
   return this->save_register(RegisterLocations::LDO23_VOLTAGE);
 }
 
 bool Axp192Component::configure_dcdc1_voltage(float level) {
-  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, 700, 3500);
+  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, OutputRanges::DCDC1_VOLTAGE.min_val, OutputRanges::DCDC1_VOLTAGE.max_val);
   this->load_register(RegisterLocations::DCDC1_VOLTAGE);
   this->set_dcdc1_voltage(scaled);
   return this->save_register(RegisterLocations::DCDC1_VOLTAGE);
 }
 
 bool Axp192Component::configure_dcdc3_voltage(float level) {
-  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, 700, 3500);
+  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, OutputRanges::DCDC3_VOLTAGE.min_val, OutputRanges::DCDC3_VOLTAGE.max_val);
   this->load_register(RegisterLocations::DCDC3_VOLTAGE);
   this->set_dcdc3_voltage(scaled);
   return this->save_register(RegisterLocations::DCDC3_VOLTAGE);
 }
 
 bool Axp192Component::configure_ldoio0_voltage(float level) {
-  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, 1800, 3300);
+  auto scaled = remap<float, uint32_t>(level, 0.0f, 1.0f, OutputRanges::GPIO_LDO_VOLTAGE.min_val, OutputRanges::GPIO_LDO_VOLTAGE.max_val);
   this->load_register(RegisterLocations::GPIO_LDO_VOLTAGE);
   this->set_ldoio0_voltage(scaled);
   return this->save_register(RegisterLocations::GPIO_LDO_VOLTAGE);
@@ -514,32 +534,32 @@ bool Axp192Component::get_ldoio0_enabled() {
 
 float Axp192Component::get_ldo2_voltage() {
   auto raw = (this->registers_.at(RegisterLocations::LDO23_VOLTAGE) & 0b11110000) >> 4;
-  return remap<float, uint8_t>(raw, 0, 0x0F, 0, 100);
+  return remap<float, uint8_t>(raw, OutputRanges::LDO2_VOLTAGE.min_reg, OutputRanges::LDO2_VOLTAGE.max_reg, 0.0f, 1.0f);
 }
 
 float Axp192Component::get_ldo3_voltage() {
   auto raw = (this->registers_.at(RegisterLocations::LDO23_VOLTAGE) & 0b00001111);
-  return remap<float, uint8_t>(raw, 0, 0x0F, 0, 100);
+  return remap<float, uint8_t>(raw, OutputRanges::LDO3_VOLTAGE.min_reg, OutputRanges::LDO3_VOLTAGE.max_reg, 0.0f, 1.0f);
 }
 
 float Axp192Component::get_dcdc1_voltage() {
   auto raw = (this->registers_.at(RegisterLocations::DCDC1_VOLTAGE) & 0b01111111);
-  return remap<float, uint8_t>(raw, 0, 0x7F, 0, 100);
+  return remap<float, uint8_t>(raw, OutputRanges::DCDC1_VOLTAGE.min_reg, OutputRanges::DCDC1_VOLTAGE.max_reg, 0.0f, 1.0f);
 }
 
 float Axp192Component::get_dcdc3_voltage() {
   auto raw = (this->registers_.at(RegisterLocations::DCDC3_VOLTAGE) & 0b01111111);
-  return remap<float, uint8_t>(raw, 0, 0x7F, 0, 100);
+  return remap<float, uint8_t>(raw, OutputRanges::DCDC3_VOLTAGE.min_reg, OutputRanges::DCDC3_VOLTAGE.max_reg, 0.0f, 1.0f);
 }
 
 float Axp192Component::get_ldoio0_voltage() {
   auto raw = (this->registers_.at(RegisterLocations::GPIO_LDO_VOLTAGE) & 0b11110000) >> 4;
-  return remap<float, uint8_t>(raw, 0, 0x0F, 0, 100);
+  return remap<float, uint8_t>(raw, OutputRanges::GPIO_LDO_VOLTAGE.min_reg, OutputRanges::GPIO_LDO_VOLTAGE.max_reg, 0.0f, 1.0f);
 }
 
-void Axp192Component::set_dcdc2_voltage(uint32_t dcdc2_voltage) {
-  this->update_register(RegisterLocations::DCDC2_VOLTAGE,
-                        detail::constrained_remap<uint32_t, 700, 2275, 0x0, 0x3F>(dcdc2_voltage), 0b11000000);
+void Axp192Component::set_dcdc2_voltage(float dcdc2_voltage) {
+  this->update_register(RegisterLocations::DCDC2_VOLTAGE, OutputRanges::DCDC2_VOLTAGE.to_register(dcdc2_voltage),
+                        0b11000000);
 }
 
 void Axp192Component::set_disable_dcdc2(bool disable_dcdc2) {
@@ -594,7 +614,6 @@ void Axp192Component::do_irqs_() {
 }
 
 void Axp192Component::enable_irq(IrqType irq) {
-
   ESP_LOGV(this->get_component_source(), "Enable IRQ %s bits: 0x%80X", detail::to_hex(irq).c_str(),
            detail::to_int(irq));
   if (detail::to_int(irq) > 0x800000) {
@@ -661,7 +680,6 @@ void Axp192Component::publish_helper_(IrqType type, bool state) {
   }
 #endif
 }
-
 void Axp192Component::publish_helper_(MonitorType type, bool state) {
 #ifdef USE_BINARY_SENSOR
   auto sensor = this->monitors_.find(type);

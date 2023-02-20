@@ -8,6 +8,7 @@ MULTI_CONF = True
 
 CONF_AXP192_ID = 'axp192_id'
 DEPENDENCIES = ['i2c']
+AUTOLOAD = ["switch","binary_sensor","sensor","output"]
 
 CONF_POWER_BUTTON = 'power_button_sensor'
 CONF_DISABLE_LDOIO0 = 'disable_ldoio0'
@@ -15,26 +16,32 @@ CONF_DISABLE_RTC = 'disable_ldo1'
 CONF_DISABLE_LDO2 = 'disable_ldo2'
 CONF_DISABLE_LDO3 = 'disable_ldo3'
 CONF_DISABLE_DCDC1 = 'disable_dcdc1'
+CONF_DISABLE_DCDC2 = 'disable_dcdc2'
 CONF_DISABLE_DCDC3 = 'disable_dcdc3'
 CONF_LDO2_VOLTAGE = 'ldo2_voltage'
 CONF_LDO3_VOLTAGE = 'ldo3_voltage'
 CONF_DCDC1_VOLTAGE = 'dcdc1_voltage'
+CONF_DCDC2_VOLTAGE = 'dcdc2_voltage'
 CONF_DCDC3_VOLTAGE = 'dcdc3_voltage'
 CONF_LDOIO0_VOLTAGE = 'ldoio0_voltage'
 axp192_ns = cg.esphome_ns.namespace('axp192')
 
 
+CONF_OUTPUT_RTC = 'rtc'
 CONF_OUTPUT_LDO2 = 'ldo2'
 CONF_OUTPUT_LDO3 = 'ldo3'
 CONF_OUTPUT_DCDC1 = 'dcdc1'
+CONF_OUTPUT_DCDC2 = 'dcdc2'
 CONF_OUTPUT_DCDC3 = 'dcdc3'
 CONF_OUTPUT_LDOIO0 = 'ldoio0'
 
 output_pin = axp192_ns.enum('OutputPin', is_class=True)
 OUTPUT_PIN = {
+    CONF_OUTPUT_RTC: output_pin.OUTPUT_RTC,
     CONF_OUTPUT_LDO2: output_pin.OUTPUT_LDO2,
     CONF_OUTPUT_LDO3: output_pin.OUTPUT_LDO3,
     CONF_OUTPUT_DCDC1: output_pin.OUTPUT_DCDC1,
+    CONF_OUTPUT_DCDC2: output_pin.OUTPUT_DCDC2,
     CONF_OUTPUT_DCDC3: output_pin.OUTPUT_DCDC3,
     CONF_OUTPUT_LDOIO0: output_pin.OUTPUT_LDOIO0,
 }
@@ -91,26 +98,12 @@ VBUS_HOLD_VOLTAGE_LIMIT = {
 }
 CONF_VBUS_HOLD_VOLTAGE_LIMIT = 'vbus_hold_voltage_limit'
 
-VBusHoldVoltageLimited = axp192_ns.enum('VBusHoldVoltageLimited', is_class=True)
-VBUS_HOLD_VOLTAGE_LIMITED = {
-    'NO': VBusHoldVoltageLimited.VOLTAGE_NOT_LIMITED,
-    'YES': VBusHoldVoltageLimited.VOLTAGE_LIMITED,
-}
-CONF_VBUS_HOLD_VOLTAGE_LIMITED = 'vbus_hold_voltage_limited'
-
 VBusHoldCurrentLimit = axp192_ns.enum('VBusHoldCurrentLimit', is_class=True)
 VBUS_HOLD_CURRENT_LIMIT = {
     '500mA': VBusHoldCurrentLimit.CURRENT_LIMIT_500MA,
     '100mA': VBusHoldCurrentLimit.CURRENT_LIMIT_100MA,
 }
 CONF_VBUS_HOLD_CURRENT_LIMIT = 'vbus_hold_current_limit'
-
-VBusHoldCurrentLimited = axp192_ns.enum('VBusHoldCurrentLimited', is_class=True)
-VBUS_HOLD_CURRENT_LIMITED = {
-    'NO': VBusHoldCurrentLimited.CURRENT_NOT_LIMITED,
-    'YES': VBusHoldCurrentLimited.CURRENT_LIMITED,
-}
-CONF_VBUS_HOLD_CURRENT_LIMITED = 'vbus_hold_current_limited'
 
 VBusIpsout = axp192_ns.enum('VBusIpsout', is_class=True)
 VBUS_IPSOUT = {
@@ -135,31 +128,36 @@ CONF_LDOIO0_MODE = 'ldoio0_mode'
 PowerOffAction = axp192_ns.class_('PowerOffAction', automation.Action)
 PrepareSleepAction = axp192_ns.class_('PrepareSleepAction', automation.Action)
 
+OUTPUT_VOLTAGE_RANGE = {
+    CONF_OUTPUT_LDO2: cv.float_range(1.8, 3.3),
+    CONF_OUTPUT_LDO3: cv.float_range(1.8, 3.3),
+    CONF_OUTPUT_DCDC1: cv.float_range(0.7, 3.5),
+    CONF_OUTPUT_DCDC2: cv.float_range(0.7, 2.275),
+    CONF_OUTPUT_DCDC3: cv.float_range(0.7, 3.5),
+    CONF_OUTPUT_LDOIO0: cv.float_range(1.8, 3.3),
+}
+
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(Axp192Component),
-    cv.Optional(CONF_POWER_BUTTON): binary_sensor.binary_sensor_schema(
-        icon=ICON_POWER,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-    ),
-    cv.Optional(CONF_VOFF_VOLTAGE, default='3000mV'): cv.enum(VOFFVOLTAGE),
-    cv.Optional(CONF_CHARGE_CURRENT, default='100mA'): cv.enum(CHARGECURRENT),
-    cv.Optional(CONF_CHARGE_VOLTAGE, default='4200mV'): cv.enum(CHARGEVOLTAGE),
-    cv.Optional(CONF_VBUS_HOLD_VOLTAGE_LIMIT, default='4400mV'): cv.enum(VBUS_HOLD_VOLTAGE_LIMIT),
-    cv.Optional(CONF_VBUS_HOLD_VOLTAGE_LIMITED, default='YES'): cv.enum(VBUS_HOLD_VOLTAGE_LIMITED),
-    cv.Optional(CONF_VBUS_HOLD_CURRENT_LIMIT, default='500mA'): cv.enum(VBUS_HOLD_CURRENT_LIMIT),
-    cv.Optional(CONF_VBUS_HOLD_CURRENT_LIMITED, default='YES'): cv.enum(VBUS_HOLD_CURRENT_LIMITED),
-    cv.Optional(CONF_VBUS_IPSOUT, default='NO'): cv.enum(VBUS_IPSOUT),
-    cv.Optional(CONF_LDOIO0_MODE, default='FLOATING'): cv.enum(LDOIO0_MODE),
-    cv.Optional(CONF_DISABLE_LDO2, default=False): cv.boolean,
-    cv.Optional(CONF_DISABLE_LDO3, default=False): cv.boolean,
-    cv.Optional(CONF_DISABLE_RTC, default=False): cv.boolean,
-    cv.Optional(CONF_DISABLE_DCDC1, default=False): cv.boolean,
-    cv.Optional(CONF_DISABLE_DCDC3, default=False): cv.boolean,
-    cv.Optional(CONF_LDO2_VOLTAGE, default=3): cv.All(cv.voltage, cv.float_range(1.8, 3.3)),
-    cv.Optional(CONF_LDO3_VOLTAGE, default=3.3): cv.All(cv.voltage, cv.float_range(1.8, 3.3)),
-    cv.Optional(CONF_DCDC1_VOLTAGE, default=3.3): cv.All(cv.voltage, cv.float_range(0.7, 3.5)),
-    cv.Optional(CONF_DCDC3_VOLTAGE, default=2.5): cv.All(cv.voltage, cv.float_range(0.7, 3.5)),
-    cv.Optional(CONF_LDOIO0_VOLTAGE, default=2.8): cv.All(cv.voltage, cv.float_range(1.8, 3.3)),
+    cv.Optional(CONF_VOFF_VOLTAGE): cv.enum(VOFFVOLTAGE),
+    cv.Optional(CONF_CHARGE_CURRENT): cv.enum(CHARGECURRENT),
+    cv.Optional(CONF_CHARGE_VOLTAGE): cv.enum(CHARGEVOLTAGE),
+    cv.Optional(CONF_VBUS_HOLD_VOLTAGE_LIMIT): cv.enum(VBUS_HOLD_VOLTAGE_LIMIT),
+    cv.Optional(CONF_VBUS_HOLD_CURRENT_LIMIT): cv.enum(VBUS_HOLD_CURRENT_LIMIT),
+    cv.Optional(CONF_VBUS_IPSOUT): cv.enum(VBUS_IPSOUT),
+    cv.Optional(CONF_LDOIO0_MODE): cv.enum(LDOIO0_MODE),
+    cv.Optional(CONF_DISABLE_LDO2): cv.boolean,
+    cv.Optional(CONF_DISABLE_LDO3): cv.boolean,
+    cv.Optional(CONF_DISABLE_RTC): cv.boolean,
+    cv.Optional(CONF_DISABLE_DCDC1): cv.boolean,
+    cv.Optional(CONF_DISABLE_DCDC2): cv.boolean,
+    cv.Optional(CONF_DISABLE_DCDC3): cv.boolean,
+    cv.Optional(CONF_LDO2_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_LDO2]),
+    cv.Optional(CONF_LDO3_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_LDO3]),
+    cv.Optional(CONF_DCDC1_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_DCDC1]),
+    cv.Optional(CONF_DCDC2_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_DCDC2]),
+    cv.Optional(CONF_DCDC3_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_DCDC3]),
+    cv.Optional(CONF_LDOIO0_VOLTAGE): cv.All(cv.voltage, OUTPUT_VOLTAGE_RANGE[CONF_OUTPUT_LDOIO0]),
 }).extend(i2c.i2c_device_schema(0x77)).extend(cv.polling_component_schema('60s'))
 
 
@@ -168,29 +166,32 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
-    cg.add(var.set_voff(config[CONF_VOFF_VOLTAGE]))
-    cg.add(var.set_charge_voltage(config[CONF_CHARGE_VOLTAGE]))
-    cg.add(var.set_charge_current(config[CONF_CHARGE_CURRENT]))
-    cg.add(var.set_vbus_ipsout(config[CONF_VBUS_IPSOUT]))
-    cg.add(var.set_vbus_hold_current_limited(config[CONF_VBUS_HOLD_CURRENT_LIMITED]))
-    cg.add(var.set_vbus_hold_current_limit(config[CONF_VBUS_HOLD_CURRENT_LIMIT]))
-    cg.add(var.set_vbus_hold_voltage_limited(config[CONF_VBUS_HOLD_VOLTAGE_LIMITED]))
-    cg.add(var.set_vbus_hold_voltage_limit(config[CONF_VBUS_HOLD_VOLTAGE_LIMIT]))
-    cg.add(var.set_disable_rtc(config[CONF_DISABLE_RTC]))
-    cg.add(var.set_disable_ldo2(config[CONF_DISABLE_LDO2]))
-    cg.add(var.set_disable_ldo3(config[CONF_DISABLE_LDO3]))
-    cg.add(var.set_disable_dcdc1(config[CONF_DISABLE_DCDC1]))
-    cg.add(var.set_disable_dcdc3(config[CONF_DISABLE_DCDC3]))
-    cg.add(var.set_dcdc1_voltage(config[CONF_DCDC1_VOLTAGE] * 1000))
-    cg.add(var.set_dcdc3_voltage(config[CONF_DCDC3_VOLTAGE] * 1000))
-    cg.add(var.set_ldo2_voltage(config[CONF_LDO2_VOLTAGE] * 1000))
-    cg.add(var.set_ldo3_voltage(config[CONF_LDO3_VOLTAGE] * 1000))
-    cg.add(var.set_ldoio0_voltage(config[CONF_LDOIO0_VOLTAGE] * 1000))
-    cg.add(var.set_ldoio0_mode(config[CONF_LDOIO0_MODE]))
 
-    if (CONF_POWER_BUTTON in config):
-        button = await binary_sensor.new_binary_sensor(config[CONF_POWER_BUTTON])
-        cg.add(var.monitor_power_button(button))
+    for key in [
+        CONF_VOFF_VOLTAGE,
+        CONF_CHARGE_CURRENT,
+        CONF_CHARGE_VOLTAGE,
+        CONF_VBUS_HOLD_VOLTAGE_LIMIT,
+        CONF_VBUS_HOLD_CURRENT_LIMIT,
+        CONF_VBUS_IPSOUT,
+        CONF_LDOIO0_MODE,
+        CONF_DISABLE_LDO2,
+        CONF_DISABLE_LDO3,
+        CONF_DISABLE_RTC,
+        CONF_DISABLE_DCDC1,
+        CONF_DISABLE_DCDC2,
+        CONF_DISABLE_DCDC3,
+        CONF_LDO2_VOLTAGE,
+        CONF_LDO3_VOLTAGE,
+        CONF_DCDC1_VOLTAGE,
+        CONF_DCDC2_VOLTAGE,
+        CONF_DCDC3_VOLTAGE,
+        CONF_LDOIO0_VOLTAGE,
+    ]:
+        if key not in config:
+            continue
+        conf = config[key]
+        cg.add(getattr(var, f"set_{key}")(config[key]))
 
 
 @automation.register_action(

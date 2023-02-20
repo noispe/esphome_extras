@@ -16,12 +16,13 @@ class Axp192Output : public Parented<Axp192Component>, public output::FloatOutpu
   void setup() override;
   float get_setup_priority() const override { return setup_priority::HARDWARE; };
   void set_output(OutputPin pin) { pin_ = pin; }
-  void set_voltage(float voltage) { voltage_ = voltage; }
+  void set_level(float level) { level_ = level; }
+  void set_voltage(float volts);
   void write_state(float state) override;
 
  private:
   OutputPin pin_ = OutputPin::OUTPUT_LDO2;
-  esphome::optional<float> voltage_;
+  esphome::optional<float> level_;
 };
 
 
