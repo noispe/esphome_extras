@@ -117,49 +117,6 @@ void Axp192Component::update() {
       }
     }
   }
-  /*
-    this->publish_helper_(MonitorType::ACIN_PRESENT, (bits & detail::to_int(MonitorType::ACIN_PRESENT) != 0);
-
-    bool acin_valid = (buffer.value().at(0) & 0b01000000) != 0;
-    this->publish_helper_(MonitorType::ACIN_VALID, !acin_valid);
-
-    bool vbus_present = (buffer.value().at(0) & 0b00100000) != 0;
-    this->publish_helper_(MonitorType::VBUS_PRESENT, vbus_present);
-
-    bool vbus_valid = (buffer.value().at(0) & 0b00010000) != 0;
-    this->publish_helper_(MonitorType::VBUS_VALID, !vbus_valid);
-
-    bool vhold_over = (buffer.value().at(0) & 0b00001000) != 0;
-    this->publish_helper_(MonitorType::VBUS_ABOVE, vhold_over);
-
-    bool charge_state = (buffer.value().at(0) & 0b00000100) != 0;
-    this->publish_helper_(MonitorType::BATTERY_CURRENT_DIRECTION, !charge_state);
-
-    bool acin_vbus_short = (buffer.value().at(0) & 0b00000010) != 0;
-    this->publish_helper_(MonitorType::ACIN_VBUS_SHORT, acin_vbus_short);
-
-    bool acin_vbus_trigger = (buffer.value().at(0) & 0b00000001) != 0;
-    this->publish_helper_(MonitorType::ACIN_VBUS_TRIGGER_BOOT, acin_vbus_trigger);
-
-    // battery
-    bool axp_overtemp = (buffer.value().at(1) & 0b10000000) != 0;
-    this->publish_helper_(MonitorType::AXP_OVER_TEMP, axp_overtemp);
-
-    bool charging = (buffer.value().at(1) & 0b01000000) != 0;
-    this->publish_helper_(MonitorType::CHARGE_INDICATE, charging);
-
-    bool battery_present = (buffer.value().at(1) & 0b00100000) != 0;
-    this->publish_helper_(MonitorType::BATTERY_PRESENT, battery_present);
-
-    bool battery_active = (buffer.value().at(1) & 0b00001000) != 0;
-    this->publish_helper_(MonitorType::BATTERY_ACTIVE, battery_active);
-
-    bool current_under = (buffer.value().at(1) & 0b00000100) != 0;
-    this->publish_helper_(MonitorType::CHARGE_CURRENT_LOW, current_under);
-  }
-}
-}
-*/
 
 #endif
 #ifdef USE_SENSOR

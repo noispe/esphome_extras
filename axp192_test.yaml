@@ -15,34 +15,35 @@ axp192:
   dcdc1_voltage: 3300mv
   dcdc3_voltage: 1.5V
 
-binary_sensor:
-  - platform: axp192
-    axp192_id: axp
-    type: charge_indicate
-    id: axp_charger
-    name: "Charger"
-  - platform: axp192
-    axp192_id: axp
-    type: battery_present
-    name: Battery
-  - platform: axp192
-    axp192_id: axp
-    type: vbus_valid_irq
-    name: Invalid VBUS
-  - platform: axp192
-    axp192_id: axp
-    type: low_charge_current_irq
-    name: Low Charge Current
-  - platform: axp192
-    axp192_id: axp
-    type: acin_over_voltage_irq
-    name: Over Voltage
+# binary_sensor:
+#   - platform: axp192
+#     axp192_id: axp
+#     type: charge_indicate
+#     id: axp_charger
+#     name: "Charger"
+#   - platform: axp192
+#     axp192_id: axp
+#     type: battery_present
+#     name: Battery
+#   - platform: axp192
+#     axp192_id: axp
+#     type: vbus_valid_irq
+#     name: Invalid VBUS
+#   - platform: axp192
+#     axp192_id: axp
+#     type: low_charge_current_irq
+#     name: Low Charge Current
+#   - platform: axp192
+#     axp192_id: axp
+#     type: acin_over_voltage_irq
+#     name: Over Voltage
 
 output:
   - platform: axp192
     axp192_id: axp
     output: ldo3
-    id: axp_ldo3
+    id: axp_ldo3_output
+    power: 25%
 
 switch:
   - platform: axp192
@@ -50,22 +51,22 @@ switch:
     output: ldo3
     name: LDO3
 
-light:
-  - platform: monochromatic
-    output: axp_ldo3
-    restore_mode: ALWAYS_ON
-    name: "Backlight"
+# light:
+#   - platform: monochromatic
+#     output: axp_ldo3
+#     restore_mode: ALWAYS_ON
+#     name: "Backlight"
 
-sensor:
-  - platform: axp192
-    axp192_id: axp
-    type: battery_voltage
-    name: "Voltage"
-  - platform: axp192
-    axp192_id: axp
-    type: battery_charge_current
-    name: "Current"
-    filters:
-      - sliding_window_moving_average:
-          window_size: 15
-          send_every: 15
+# sensor:
+#   - platform: axp192
+#     axp192_id: axp
+#     type: battery_voltage
+#     name: "Voltage"
+#   - platform: axp192
+#     axp192_id: axp
+#     type: battery_charge_current
+#     name: "Current"
+#     filters:
+#       - sliding_window_moving_average:
+#           window_size: 15
+#           send_every: 15

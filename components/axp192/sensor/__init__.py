@@ -22,6 +22,12 @@ CONF_GPIO0_VOLTAGE = "gpio0_voltage"
 CONF_GPIO1_VOLTAGE = "gpio1_voltage"
 CONF_GPIO2_VOLTAGE = "gpio2_voltage"
 CONF_GPIO3_VOLTAGE = "gpio3_voltage"
+CONF_DCDC1_VOLTAGE = "dcdc1_voltage"
+CONF_DCDC2_VOLTAGE = "dcdc2_voltage"
+CONF_DCDC3_VOLTAGE = "dcdc3_voltage"
+CONF_LDO2_VOLTAGE = "ldo2_voltage"
+CONF_LDO3_VOLTAGE = "ldo3_voltage"
+CONF_GPIO_LDO_VOLTAGE = "gpio_ldo_voltage"
 
 sensor_type = axp192_ns.enum('SensorType', is_class=True)
 SENSOR_TYPE = {
@@ -40,6 +46,12 @@ SENSOR_TYPE = {
     CONF_GPIO1_VOLTAGE: sensor_type.GPIO1_VOLTAGE,
     CONF_GPIO2_VOLTAGE: sensor_type.GPIO2_VOLTAGE,
     CONF_GPIO3_VOLTAGE: sensor_type.GPIO3_VOLTAGE,
+    CONF_DCDC1_VOLTAGE: sensor_type.DCDC1_VOLTAGE,
+    DCDC2_VOLTAGE: sensor_type.DCDC2_VOLTAGE,
+    DCDC3_VOLTAGE: sensor_type.DCDC3_VOLTAGE,
+    LDO2_VOLTAGE: sensor_type.LDO2_VOLTAGE,
+    LDO3_VOLTAGE: sensor_type.LDO3_VOLTAGE,
+    GPIO_LDO_VOLTAGE: sensor_type.GPIO_LDO_VOLTAGE,
 }
 
 TYPES = {
@@ -148,6 +160,51 @@ TYPES = {
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_DCDC1_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_DCD2_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_DCDC3_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_LDO2_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_LDO3_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+    CONF_GPIO_LDO_VOLTAGE: sensor.sensor_schema(
+        unit_of_measurement=UNIT_VOLT,
+        accuracy_decimals=4,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ).extend({cv.GenerateID(): cv.declare_id(Axp192Sensor), cv.Required(CONF_AXP192_ID): cv.use_id(Axp192Component)}),
+
+
+
 }
 
 CONFIG_SCHEMA = cv.typed_schema(

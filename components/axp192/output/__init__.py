@@ -16,13 +16,9 @@ TYPE_SCHEMAS = dict([
         cv.GenerateID(CONF_AXP192_ID): cv.use_id(Axp192Component),
         cv.Optional(CONF_OUTPUT): cv.one_of(OUTPUT_VOLTAGE_RANGE.keys()),
         cv.Optional(CONF_POWER, "power"): cv.percentage,
-        #cv.Exclusive(CONF_POWER, "power"): cv.percentage,
-        #cv.Exclusive(CONF_VOLTAGE, "power"): cv.All(cv.voltage,value)
     }
     ).extend(cv.COMPONENT_SCHEMA)
 ] for key, value in OUTPUT_VOLTAGE_RANGE.items())
-
-print(TYPE_SCHEMAS.keys())
 
 CONFIG_SCHEMA = cv.typed_schema(
     TYPE_SCHEMAS,
@@ -36,7 +32,5 @@ async def to_code(config):
     cg.add(var.set_output(OUTPUT_PIN[config[CONF_OUTPUT]]))
     if CONF_POWER in config:
         cg.add(var.set_level(config[CONF_POWER]))
-    if CONF_VOLTAGE in config:
-        cg.add(var.set_voltage(config[CONF_VOLTAGE]))
     await output.register_output(var, config)
     return var
