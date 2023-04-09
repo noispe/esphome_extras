@@ -41,7 +41,7 @@ void GroveTH02Component::dump_config() {
   if (this->is_failed()) {
     ESP_LOGE(TAG, "Communication with TH02 failed!");
   }
-  LOG_CONFIG("  ". "Sensor %x", identity.value_or(0x00));
+  ESP_LOGCONFIG("  ". "Sensor %x", identity.value_or(0x00));
   LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
 }
