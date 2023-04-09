@@ -11,14 +11,14 @@ static const char *const TAG = "grove_th02";
 
 void GroveTH02Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up TH02...");
-  auto identity = this->read_byte(regId).value_or(0x00);
+  auto identity = this->read_byte(regId);
 
-  if (identity == 0b0101000) {
-    ESP_LOGD(TAG, "Configured.");
-  } else {
-    ESP_LOGE(TAG, "Unknown id %x", identity);
-    this->mark_failed();
-  }
+  //if (identity == 0b0101000) {
+  //  ESP_LOGD(TAG, "Configured.");
+  //} else {
+  //  ESP_LOGE(TAG, "Unknown id %x", identity);
+  //  this->mark_failed();
+  //}
 }
 
 void GroveTH02Component::update() {
@@ -34,11 +34,14 @@ void GroveTH02Component::update() {
 float GroveTH02Component::get_setup_priority() const { return setup_priority::DATA; }
 
 void GroveTH02Component::dump_config() {
+  auto identity = this->read_byte(regId);
+
   ESP_LOGCONFIG(TAG, "TH02:");
   LOG_I2C_DEVICE(this);
   if (this->is_failed()) {
     ESP_LOGE(TAG, "Communication with TH02 failed!");
   }
+  LOG_CONFIG("  ". "Sensor %x", identity.value_or(0x00));
   LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
 }
