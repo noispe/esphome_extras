@@ -1,0 +1,16 @@
+esphome:
+  name: humidity
+  platform: ESP32
+  board: m5stick-c
+
+external_components:
+  - source: components
+
+i2c:
+
+sensor:
+  - platform: grove_th02
+    temperature:
+      name: Temp
+    humidity:
+      name: Hum
