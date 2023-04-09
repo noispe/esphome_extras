@@ -12,11 +12,12 @@ static constexpr uint8_t regDataH = 0x01;
 static constexpr uint8_t regDataL = 0x02;
 static constexpr uint8_t regConfig = 0x03;
 static constexpr uint8_t regId = 0x11;
-static constexpr uint8_t statusRdyMask = 0x01;  // poll RDY,0 indicate the conversion is done
+static constexpr uint8_t statusRdyMask = 0x01;   // poll RDY,0 indicate the conversion is done
 static constexpr uint8_t cmdMeasureHumi = 0x01;  // perform a humility measurement
 static constexpr uint8_t cmdMeasureTemp = 0x11;  // perform a temperature measurement
 static constexpr uint8_t th02WrRegMode = 0xC0;
 static constexpr uint8_t th02RdRegMode = 0x80;
+static constexpr uint8_t fastMask = 0x20;  // fast mode
 
 class GroveTH02Component : public PollingComponent, public i2c::I2CDevice {
  public:
@@ -27,16 +28,18 @@ class GroveTH02Component : public PollingComponent, public i2c::I2CDevice {
 
   void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
+  void set_fast_mode(bool fast_mode) { fast_mode_ = fast_mode; }
 
  protected:
   sensor::Sensor *temperature_sensor_{nullptr};
   sensor::Sensor *humidity_sensor_{nullptr};
+  bool fast_mode_ = false;
 
-private:
+ private:
+  uint8_t make_fast_(uint8_t command);
   bool is_ready_();
   float read_temperature_();
   float read_humitidy_();
-
 };
 
 }  // namespace grove_th02

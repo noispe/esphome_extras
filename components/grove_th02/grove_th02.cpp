@@ -11,7 +11,7 @@ static const char *const TAG = "grove_th02";
 
 void GroveTH02Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up TH02...");
-  auto identity = this->read_byte(regId);
+  //auto identity = this->read_byte(regId);
 
   //if (identity == 0b0101000) {
   //  ESP_LOGD(TAG, "Configured.");
@@ -36,7 +36,7 @@ float GroveTH02Component::get_setup_priority() const { return setup_priority::DA
 void GroveTH02Component::dump_config() {
   auto identity = this->read_byte(regId);
 
-  ESP_LOGCONFIG(TAG, "TH02: %x", identity.value_or(0x00));
+  ESP_LOGCONFIG(TAG, "TH02:");
   LOG_I2C_DEVICE(this);
   if (this->is_failed()) {
     ESP_LOGE(TAG, "Communication with TH02 failed!");
@@ -47,11 +47,11 @@ void GroveTH02Component::dump_config() {
 
 bool GroveTH02Component::is_ready_() {
   auto status = this->read_byte(regStatus).value_or(0xFF);
-  return !(status & statusRdyMask);
+  return (status & statusRdyMask) == 0;
 }
 
 float GroveTH02Component::read_temperature_() {
-  this->write_byte(regConfig, cmdMeasureTemp);
+  this->write_byte(regConfig, this->make_fast_(cmdMeasureTemp));
   while (!this->is_ready_())
     ;
 
@@ -62,7 +62,7 @@ float GroveTH02Component::read_temperature_() {
 }
 
 float GroveTH02Component::read_humitidy_() {
-  this->write_byte(regConfig, cmdMeasureHumi);
+  this->write_byte(regConfig, this->make_fast_(cmdMeasureHumi));
   while (!this->is_ready_())
     ;
 
@@ -70,6 +70,10 @@ float GroveTH02Component::read_humitidy_() {
   data |= this->read_byte(regDataL).value_or(0x00);
   data = data >> 4;
   return (data / 16.0f) - 24.0f;
+}
+
+uint8_t GroveTH02Component::make_fast_(uint8_t command) {
+  return (this->fast_mode_ ? fastMask : 0) | command;
 }
 
 }  // namespace grove_th02

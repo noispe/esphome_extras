@@ -13,6 +13,7 @@ from esphome.const import (
 )
 
 DEPENDENCIES = ["i2c"]
+CONF_FAST = "fast_mode"
 
 grove_th02_ns = cg.esphome_ns.namespace("grove_th02")
 GroveTH02Component = grove_th02_ns.class_("GroveTH02Component", cg.PollingComponent, i2c.I2CDevice)
@@ -33,6 +34,8 @@ CONFIG_SCHEMA = (
                 device_class=DEVICE_CLASS_HUMIDITY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_FAST) : cv.boolean
+            ,
         }
     )
     .extend(cv.polling_component_schema("60s"))
@@ -52,3 +55,6 @@ async def to_code(config):
     if CONF_HUMIDITY in config:
         sens = await sensor.new_sensor(config[CONF_HUMIDITY])
         cg.add(var.set_humidity_sensor(sens))
+
+    if CONF_FAST in config:
+        cg.add(var.set_fast_mode(config[CONF_FAST]))
