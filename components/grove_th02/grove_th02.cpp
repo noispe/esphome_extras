@@ -36,12 +36,11 @@ float GroveTH02Component::get_setup_priority() const { return setup_priority::DA
 void GroveTH02Component::dump_config() {
   auto identity = this->read_byte(regId);
 
-  ESP_LOGCONFIG(TAG, "TH02:");
+  ESP_LOGCONFIG(TAG, "TH02: %x", identity.value_or(0x00));
   LOG_I2C_DEVICE(this);
   if (this->is_failed()) {
     ESP_LOGE(TAG, "Communication with TH02 failed!");
   }
-  ESP_LOGCONFIG("  ". "Sensor %x", identity.value_or(0x00));
   LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
 }
