@@ -4,7 +4,7 @@ from  esphome.components import color, font
 from esphome.const import CONF_ID, CONF_COLOR
 from . import common, core_elements, button_element
 
-DEPENDENCIES = ["display"]
+DEPENDENCIES = ["display","font"]
 MULTI_CONF = True
 
 BaseUiComponent = common.ui_components_ns.class_("BaseUiComponent")
