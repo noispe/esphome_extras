@@ -1,5 +1,6 @@
 import functools
 
+import json
 from esphome import core
 from esphome.components import display, image
 from esphome.components.font import validate_truetype_file, validate_pillow_installed
@@ -8,10 +9,8 @@ import esphome.codegen as cg
 import esphome.cpp_generator as ccpg
 from esphome.const import CONF_ID, CONF_SIZE, CONF_RAW_DATA_ID
 from esphome.core import CORE, HexInt
-import json
-import math
 
-DEPENDENCIES = ["display"]
+DEPENDENCIES = ["display","image"]
 MULTI_CONF = True
 
 
@@ -54,17 +53,17 @@ CONFIG_SCHEMA = cv.All(validate_pillow_installed, ICON_PROVIDER_SCHEMA)
 class PlainStaticConstAssignmentExpression(ccpg.AssignmentExpression):
     __slots__ = ()
 
-    def __init__(self, type_, name, rhs, obj):
-        super().__init__(type_, "", name, rhs, obj)
+    def __init__(self, type_, name, rhs):
+        super().__init__(type_, "", name, rhs)
 
     def __str__(self):
         return f"static const {self.type} {self.name} = {self.rhs}"
 
 
-def static_const_obj(id_, rhs) -> "MockObj":
+def static_const_obj(id_, rhs) -> cg.MockObj:
     rhs = cg.safe_exp(rhs)
     obj = cg.MockObj(id_, ".")
-    assignment = PlainStaticConstAssignmentExpression(id_.type, id_, rhs, obj)
+    assignment = PlainStaticConstAssignmentExpression(id_.type, id_, rhs)
     CORE.add(assignment)
     CORE.register_variable(id_, obj)
     return obj
