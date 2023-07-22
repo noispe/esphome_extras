@@ -10,8 +10,8 @@ import esphome.cpp_generator as ccpg
 from esphome.const import CONF_ID, CONF_SIZE, CONF_RAW_DATA_ID
 from esphome.core import CORE, HexInt
 
-AUTO_LOAD = ["image"]
 DEPENDENCIES = ["display"]
+AUTO_LOAD = ["image"]
 MULTI_CONF = True
 
 
