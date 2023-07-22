@@ -20,10 +20,10 @@ Icons then can be used by including the `icons` component with the following pro
 - **prefix**: (Optional) A prefix for use with home assistant icons `mdi:icon-name`
 - **icons**: A list of icons that should be included in the firmware.
 
-To use the icon with the `esphome::display::DisplayBuffer` call the following function from the display lambda:
+To use the icon with the `esphome::display::Display` call the following function from the display lambda:
 
 ```cpp
-display::Image *IconProvider::get_icon(const std::string &name)
+image::Image *IconProvider::get_icon(const std::string &name)
 ```
 
 Example:

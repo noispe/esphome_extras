@@ -10,7 +10,7 @@
 namespace esphome {
 namespace inkplate10 {
 
-class Inkplate10 : public PollingComponent, public display::DisplayBuffer, public i2c::I2CDevice {
+class Inkplate10 : public PollingComponent, public display::Display, public i2c::I2CDevice {
  public:
   const uint32_t DATA = 0x0E8C0030;
 

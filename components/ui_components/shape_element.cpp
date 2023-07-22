@@ -2,7 +2,7 @@
 
 namespace esphome {
 
-void ui_components::ShapeElement::draw(display::DisplayBuffer &disp) {
+void ui_components::ShapeElement::draw(display::Display &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, get_fg_color());
   }

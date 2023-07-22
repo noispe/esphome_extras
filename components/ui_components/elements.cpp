@@ -43,7 +43,7 @@ void ui_components::BaseElement::position_inside(int *content_x, int *content_y,
   }
 }
 
-void ui_components::Primitives::quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter, int radius,
+void ui_components::Primitives::quarter_circle(display::Display &disp, int xCenter, int yCenter, int radius,
                                                Primitives::Corner corner, const Color &color) {
   int f = 1 - radius;
   int ddF_x = 1;
@@ -79,7 +79,7 @@ void ui_components::Primitives::quarter_circle(display::DisplayBuffer &disp, int
   }
 }
 
-void ui_components::Primitives::filled_quarter_circle(display::DisplayBuffer &disp, int xCenter, int yCenter,
+void ui_components::Primitives::filled_quarter_circle(display::Display &disp, int xCenter, int yCenter,
                                                       int radius, int corner, int offset, const Color &color) {
   int16_t f = 1 - radius;
   int16_t ddF_x = 1;
@@ -117,7 +117,7 @@ void ui_components::Primitives::filled_quarter_circle(display::DisplayBuffer &di
   }
 }
 
-void ui_components::Primitives::round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height,
+void ui_components::Primitives::round_rect(display::Display &disp, int x, int y, int width, int height,
                                            int radius, const Color &color) {
   int max_radius = round(((width < height) ? width : height) / 2);  // 1/2 minor axis rounded
   if (radius > max_radius) {
@@ -134,7 +134,7 @@ void ui_components::Primitives::round_rect(display::DisplayBuffer &disp, int x, 
   quarter_circle(disp, x + radius, y + height - radius - 1, radius, Corner::BOTTOM_LEFT, color);
 }
 
-void ui_components::Primitives::filled_round_rect(display::DisplayBuffer &disp, int x, int y, int width, int height,
+void ui_components::Primitives::filled_round_rect(display::Display &disp, int x, int y, int width, int height,
                                                   int radius, const Color &color) {
   int max_radius = round(((width < height) ? width : height) / 2);  // 1/2 minor axis rounded
   if (radius > max_radius) {

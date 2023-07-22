@@ -8,7 +8,7 @@ namespace ui_components {
 
 class ImageElement : public BaseElement {
  public:
-  void draw(display::DisplayBuffer &disp) override;
+  void draw(display::Display &disp) override;
   void set_image(ImageProvider *content) { iprovider_ = content; }
 
  private:

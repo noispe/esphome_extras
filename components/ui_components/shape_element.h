@@ -16,7 +16,7 @@ class ShapeElement : public BaseElement {
     ROUND_FILLED_RECTANGLE
   };
 
-  void draw(display::DisplayBuffer &disp) override;
+  void draw(display::Display &disp) override;
   void set_shape_type(ShapeType shapetype) { shapetype_ = shapetype; }
   void set_radius(int r) { radius_ = r; }
 

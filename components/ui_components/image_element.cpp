@@ -4,12 +4,12 @@
 namespace esphome {
 static const char *const TAG = "image_element";
 
-void ui_components::ImageElement::draw(display::DisplayBuffer &disp) {
+void ui_components::ImageElement::draw(display::Display &disp) {
   if (border_) {
     disp.rectangle(x_, y_, width_, height_, get_fg_color());
   }
   disp.filled_rectangle(x(), y(), width(), height(), get_bg_color());
-  display::Image *img = iprovider_->get_image();
+  image::Image *img = iprovider_->get_image();
   if (img == nullptr) {
     return;
   }

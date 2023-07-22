@@ -8,8 +8,8 @@ namespace ui_components {
 class TemplateElement : public BaseElement {
  public:
   using drawing_template_t =
-      std::function<void(display::DisplayBuffer &, int, int, int, int, display::TextAlign, Color, Color)>;
-  void draw(display::DisplayBuffer &disp) override;
+      std::function<void(display::Display &, int, int, int, int, display::TextAlign, Color, Color)>;
+  void draw(display::Display &disp) override;
   void set_drawer(drawing_template_t drawer) { drawer_ = drawer; }
 
  private:

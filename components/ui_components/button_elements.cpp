@@ -26,7 +26,7 @@ void ui_components::AbstractButton::release() {
 
 bool ui_components::AbstractButton::is_pressed() { return proxy_->state; }
 
-void ui_components::TextButtonElement::draw(display::DisplayBuffer &disp) {
+void ui_components::TextButtonElement::draw(display::Display &disp) {
   /*
   auto old_bg_color = get_bg_color();
   auto old_fg_color = get_fg_color();
@@ -43,7 +43,7 @@ void ui_components::TextButtonElement::draw(display::DisplayBuffer &disp) {
   */
 }
 
-void ui_components::IconButtonElement::draw(display::DisplayBuffer &disp) {
+void ui_components::IconButtonElement::draw(display::Display &disp) {
   auto old_bg_color = get_bg_color();
   auto old_fg_color = get_fg_color();
   get_bg_color() = this->is_pressed() ? get_fg_color() : get_bg_color();

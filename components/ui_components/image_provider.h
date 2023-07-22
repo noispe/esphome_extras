@@ -15,8 +15,8 @@ namespace ui_components {
 
 class ImageProvider {
  public:
-  ImageProvider(display::Image *image);
-  ImageProvider(const std::function<display::Image *()> &content) { dynamic_content_ = content; }
+  ImageProvider(image::Image *image);
+  ImageProvider(const std::function<image::Image *()> &content) { dynamic_content_ = content; }
 #if defined(USE_ICON_PROVIDER)
 #if defined(USE_TEXT_SENSOR)
   ImageProvider(text_sensor::TextSensor *sensor_name, icon_provider::IconProvider *icon);
@@ -24,10 +24,10 @@ class ImageProvider {
   ImageProvider(const std::string name, icon_provider::IconProvider *icon);
   ImageProvider(const std::function<std::string()> &dynamic_name, icon_provider::IconProvider *icon);
 #endif
-  display::Image *get_image();
+  image::Image *get_image();
 
  private:
-  std::function<display::Image *()> dynamic_content_{};
+  std::function<image::Image *()> dynamic_content_{};
 };
 
 }  // namespace ui_components

@@ -29,7 +29,7 @@ class AbstractButton : public touchscreen::TouchListener {
 
 class TextButtonElement : public TextElement, public AbstractButton {
  public:
-  void draw(display::DisplayBuffer &disp) override;
+  void draw(display::Display &disp) override;
   bool in_range(uint16_t x, uint16_t y) const override;
 
  protected:
@@ -38,7 +38,7 @@ class TextButtonElement : public TextElement, public AbstractButton {
 
 class IconButtonElement : public ImageElement, public AbstractButton {
  public:
-  void draw(display::DisplayBuffer &disp) override;
+  void draw(display::Display &disp) override;
   bool in_range(uint16_t x, uint16_t y) const override;
 
  protected:

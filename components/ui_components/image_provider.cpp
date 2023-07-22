@@ -2,10 +2,10 @@
 
 namespace esphome {
 
-ui_components::ImageProvider::ImageProvider(display::Image *content) {
+ui_components::ImageProvider::ImageProvider(image::Image *content) {
   dynamic_content_ = [this, content]() { return content; };
 }
-display::Image *ui_components::ImageProvider::get_image() { return dynamic_content_(); }
+image::Image *ui_components::ImageProvider::get_image() { return dynamic_content_(); }
 #if defined(USE_ICON_PROVIDER)
 #if defined(USE_TEXT_SENSOR)
 ui_components::ImageProvider::ImageProvider(text_sensor::TextSensor *sensor_name, icon_provider::IconProvider *icon) {}

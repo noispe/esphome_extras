@@ -7,7 +7,7 @@ static const char *TAG = "icon_provider";
 
 IconProvider::IconProvider(std::initializer_list<Icon> lut) : Component() {
   for (auto icon : lut) {
-    lut_.emplace(icon.name, display::Image(icon.data, icon.width, icon.height, display::ImageType::IMAGE_TYPE_BINARY));
+    lut_.emplace(icon.name, image::Image(icon.data, icon.width, icon.height, image::ImageType::IMAGE_TYPE_BINARY));
   }
 }
 
@@ -21,7 +21,7 @@ void IconProvider::dump_config() {
   }
 }
 
-display::Image *IconProvider::get_icon(const std::string &name) {
+image::Image *IconProvider::get_icon(const std::string &name) {
   auto needle = lut_.find(name);
   if (needle != lut_.end()) {
     return &needle->second;  // fix in esphome

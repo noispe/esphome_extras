@@ -7,7 +7,7 @@ namespace esphome {
 namespace ui_components {
 static const char *const TAG = "text_element";
 }
-void ui_components::TextElement::draw(display::DisplayBuffer &disp) {
+void ui_components::TextElement::draw(display::Display &disp) {
   if (!visible_) {
     return;
   }

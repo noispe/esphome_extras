@@ -9,7 +9,7 @@ Example:
 The toplevel `ui_components` is used to group the elements that it will render in the `display`'s `lambda` property.  To invoke the rendering of the elements in the lambda call:
 
 ```cpp
-void UIComponents::draw(display::DisplayBuffer &it)
+void UIComponents::draw(display::Display &it)
 ```
 
 The following properties configure the component:
@@ -103,7 +103,7 @@ An element that will display an image that can be provided by an `id` or a templ
 
 - **image**: (Required) The `id` of a registered image, or a template lambda that will provide the image. The lambda signature is:
 ```c++
-[]() -> display::Image*{};
+[]() -> image::Image*{};
 ```
 ```yaml
 image:
@@ -148,11 +148,11 @@ ui_components:
 
 ## TemplateElement
 
-An element that can render anything supported by `display::DisplayBuffer`
+An element that can render anything supported by `display::Display`
 
 - **lambda**: (Required) The code that will be called for the drawing.  The border, alignment and background are rendered, but the remainder is performed by the lambda.  The lambda signature is:
 ```c++
-[](display::DisplayBuffer &it, int x, int y, int height, int width, display::TextAlign align, Color fg_color, Color bg_color) -> void {};
+[](display::Display &it, int x, int y, int height, int width, display::TextAlign align, Color fg_color, Color bg_color) -> void {};
 ```
 The provided coordinates and size already take into account any border drawn.
 
