@@ -1,0 +1,22 @@
+esphome:
+  name: leveltest
+  platform: ESP32
+  board: esp-wrover-kit
+external_components:
+  - source: components
+
+wifi:
+  networks:
+    - ssid: "MySSID"
+      password: "password1"
+
+
+sensor:
+  - platform: grove_water_level_sensor
+    id: water_level
+    high_address:  0x77
+    low_address:  0x78
+
+i2c:
+  sda: 26
+  scl: 32
