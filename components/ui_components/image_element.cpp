@@ -9,7 +9,7 @@ void ui_components::ImageElement::draw(display::Display &disp) {
     disp.rectangle(x_, y_, width_, height_, get_fg_color());
   }
   disp.filled_rectangle(x(), y(), width(), height(), get_bg_color());
-  image::Image *img = iprovider_->get_image();
+  display::BaseImage *img = iprovider_->get_image();
   if (img == nullptr) {
     return;
   }

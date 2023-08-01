@@ -2,7 +2,7 @@
 
 #include "elements.h"
 
-#include "esphome/components/display/display_buffer.h"
+#include "esphome/components/display/display.h"
 #ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
 #endif
@@ -15,8 +15,8 @@ namespace ui_components {
 
 class ImageProvider {
  public:
-  ImageProvider(image::Image *image);
-  ImageProvider(const std::function<image::Image *()> &content) { dynamic_content_ = content; }
+  ImageProvider(display::BaseImage *image);
+  ImageProvider(const std::function<display::BaseImage *()> &content) { dynamic_content_ = content; }
 #if defined(USE_ICON_PROVIDER)
 #if defined(USE_TEXT_SENSOR)
   ImageProvider(text_sensor::TextSensor *sensor_name, icon_provider::IconProvider *icon);
@@ -24,10 +24,10 @@ class ImageProvider {
   ImageProvider(const std::string name, icon_provider::IconProvider *icon);
   ImageProvider(const std::function<std::string()> &dynamic_name, icon_provider::IconProvider *icon);
 #endif
-  image::Image *get_image();
+  display::BaseImage *get_image();
 
  private:
-  std::function<image::Image *()> dynamic_content_{};
+  std::function<display::BaseImage *()> dynamic_content_{};
 };
 
 }  // namespace ui_components
